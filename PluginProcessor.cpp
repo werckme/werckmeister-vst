@@ -121,11 +121,17 @@ bool AudioPluginAudioProcessor::isBusesLayoutSupported(const BusesLayout& layout
 #endif
 }
 
+void AudioPluginAudioProcessor::sendAllNoteOff(juce::MidiBuffer& midiMessages)
+{
+	for (int ch = 1; ch <= 16; ++ch)
+	{
+		midiMessages.addEvent(juce::MidiMessage::allNotesOff(ch), 0);
+	}
+}
+
 void AudioPluginAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
 	juce::MidiBuffer& midiMessages)
 {
-	juce::ignoreUnused(midiMessages);
-
 	juce::ScopedNoDenormals noDenormals;
 	auto totalNumInputChannels = getTotalNumInputChannels();
 	auto totalNumOutputChannels = getTotalNumOutputChannels();
@@ -140,23 +146,54 @@ void AudioPluginAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
 	}
 	juce::AudioPlayHead::CurrentPositionInfo posInfo = {0};
 	playHead->getCurrentPosition(posInfo);
+	if (!posInfo.isPlaying && _lastIsPlayingState) 
+	{
+		_lastIsPlayingState = false;
+		sendAllNoteOff(midiMessages);
+	}
 	if (!posInfo.isPlaying) {
 		return;
 	}
+	_lastIsPlayingState = true;
+	auto beginPosSeconds = posInfo.timeInSeconds;
+	auto endPosSeconds = posInfo.timeInSeconds + ((double)getBlockSize() / getSampleRate());
 
 	for (int trackIdx = 0; trackIdx < _midiFile.getNumTracks(); ++trackIdx)
 	{
 		auto track = _midiFile.getTrack(trackIdx);
-		double sampleOffset = 0;
-		auto eventIndex = track->getNextIndexAtTime(posInfo.ppqPosition * 5000);
-		if (eventIndex >= track->getNumEvents()) {
+		if (track->getNumEvents() == 0) 
+		{
 			continue;
 		}
-		auto event = track->getEventPointer(eventIndex);
-		midiMessages.addEvent(event->message, 0);
-		auto txt = event->message.getDescription().toStdString();
-		auto y = event->message.getTimeStamp();
-		int halt = 0;
+		auto eventIt = _iteratorTrackMap[trackIdx];
+		if (eventIt == track->end())  
+		{
+			eventIt = track->begin();
+		}
+		bool playHeadIsBeforeCurrentIterator = beginPosSeconds < (*eventIt)->message.getTimeStamp();
+		if (playHeadIsBeforeCurrentIterator) 
+		{
+			eventIt = track->begin();
+		}
+		while (true) {
+			if (eventIt == track->end())
+			{
+				break;
+			}
+			const auto &midiMessage = (*eventIt)->message;
+			auto eventTimeStamp = midiMessage.getTimeStamp();
+			if (eventTimeStamp > endPosSeconds)
+			{
+				break;
+			}
+			int sampleOffset = std::max<double>(0.0, (eventTimeStamp - beginPosSeconds) * getSampleRate());
+			if (eventTimeStamp >= beginPosSeconds && eventTimeStamp <= endPosSeconds) 
+			{
+				midiMessages.addEvent(midiMessage, (int)sampleOffset);
+			}
+			++eventIt;
+		}
+		_iteratorTrackMap[trackIdx] = eventIt;
 	}
 }
 
@@ -198,23 +235,18 @@ juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 void AudioPluginAudioProcessor::loadMidi(const juce::String& path)
 {
 	_midiFile.clear();
+	_iteratorTrackMap.clear();
 	juce::FileInputStream fs(path);
 	if (fs.failedToOpen()) {
 		throw std::exception(("failed to load midi file: " + path).toStdString().c_str());
 	}
 	_midiFile.readFrom(fs);
-
-	for (int trackIdx = 0; trackIdx < _midiFile.getNumTracks(); ++trackIdx)
+	_midiFile.convertTimestampTicksToSeconds();
+	auto numTracks = _midiFile.getNumTracks();
+	_iteratorTrackMap.resize(numTracks);
+	for (int trackIdx = 0; trackIdx < numTracks; ++trackIdx)
 	{
 		auto track = _midiFile.getTrack(trackIdx);
-	
-		for(auto it = track->begin(); it != track->end(); ++it)
-		{
-			auto event = *it;
-			auto txt = event->message.getDescription().toStdString();
-			auto y = event->message.getTimeStamp();
-			int halt = 0;
-		}
-
+		_iteratorTrackMap[trackIdx] = track->begin();
 	}
 }
