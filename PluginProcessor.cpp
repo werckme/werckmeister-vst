@@ -1,6 +1,7 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 #include <iostream>
+#include "Compiler.h"
 
 //==============================================================================
 AudioPluginAudioProcessor::AudioPluginAudioProcessor()
@@ -234,12 +235,12 @@ juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 //==============================================================================
 void AudioPluginAudioProcessor::loadMidi(const juce::String& path)
 {
+	Compiler compiler;
+	auto version = compiler.getVersionStr();
+	auto compileResult = compiler.compile("E:\\Users\\samba\\workspace\\werckmeister\\rendertests\\tests\\flugaufdemgluecksdrachen_main.sheet");
 	_midiFile.clear();
 	_iteratorTrackMap.clear();
-	juce::FileInputStream fs(path);
-	if (fs.failedToOpen()) {
-		throw std::exception(("failed to load midi file: " + path).toStdString().c_str());
-	}
+	juce::MemoryInputStream fs(compileResult.midiData.data(), compileResult.midiData.size(), false);
 	_midiFile.readFrom(fs);
 	_midiFile.convertTimestampTicksToSeconds();
 	auto numTracks = _midiFile.getNumTracks();

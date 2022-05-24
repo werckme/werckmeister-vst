@@ -24,19 +24,23 @@ juce_add_plugin(WerckmeisterVST
     PLUGIN_CODE Wmvt                            # A unique four-character plugin id with exactly one upper-case character
                                                 # GarageBand 10.3 requires the first letter to be upper-case, and the remaining letters to be lower-case
     FORMATS AU VST VST3 Standalone                  # The formats to build. Other valid formats are: AAX Unity VST AU AUv3
-    PRODUCT_NAME "Werckmeister VST")        # The name of the final executable, which can differ from the target name
+    PRODUCT_NAME "Werckmeister VST"
+    )        # The name of the final executable, which can differ from the target name
 
 target_sources(WerckmeisterVST
     PRIVATE
         PluginEditor.cpp
-        PluginProcessor.cpp)
+        PluginProcessor.cpp
+        Compiler.cpp)
 
 target_compile_definitions(WerckmeisterVST
     PUBLIC
         # JUCE_WEB_BROWSER and JUCE_USE_CURL would be on by default, but you might not need them.
         JUCE_WEB_BROWSER=0  # If you remove this, add `NEEDS_WEB_BROWSER TRUE` to the `juce_add_plugin` call
         JUCE_USE_CURL=0     # If you remove this, add `NEEDS_CURL TRUE` to the `juce_add_plugin` call
-        JUCE_VST3_CAN_REPLACE_VST2=0)
+        JUCE_VST3_CAN_REPLACE_VST2=0
+        JUCE_DISPLAY_SPLASH_SCREEN=0
+        )
 
 # If your target needs extra binary assets, you can add them here. The first argument is the name of
 # a new static library target that will include all the binary resources. There is an optional
