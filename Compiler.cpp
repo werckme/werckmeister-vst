@@ -47,7 +47,7 @@ namespace
         auto &result = json[key.c_str()];
         if (expected && result.isVoid())
         {
-            throw std::exception("unexpected compiler response");
+            throw std::runtime_error("unexpected compiler response");
         }
         return result;
     }
