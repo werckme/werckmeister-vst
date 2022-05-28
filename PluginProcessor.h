@@ -2,6 +2,7 @@
 
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <vector>
+#include <thread>
 
 class AudioPluginAudioProcessor : public juce::AudioProcessor
 {
@@ -29,12 +30,14 @@ public:
 	void setStateInformation(const void* data, int sizeInBytes) override;
 
 private:
+	typedef std::recursive_mutex Mutex;
+	Mutex mutex;
 	typedef juce::MidiMessageSequence::MidiEventHolder const* const* MidiEventIterator;
 	void sendAllNoteOff(juce::MidiBuffer&);
 	typedef std::vector<MidiEventIterator> IteratorTrackMap;
 	IteratorTrackMap _iteratorTrackMap;
 	juce::MidiFile _midiFile;
 	bool _lastIsPlayingState = false;
-	void loadMidi(const juce::String& path);
+	void compile(const juce::String& path);
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioPluginAudioProcessor)
 };

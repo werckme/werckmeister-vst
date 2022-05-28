@@ -89,7 +89,6 @@ void AudioPluginAudioProcessor::changeProgramName(int index, const juce::String&
 void AudioPluginAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
 	juce::ignoreUnused(sampleRate, samplesPerBlock);
-	loadMidi("E:\\Users\\samba\\Downloads\\Werckmeister-xCiODoOvPDPM.mid");
 }
 
 void AudioPluginAudioProcessor::releaseResources()
@@ -140,7 +139,11 @@ void AudioPluginAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
 	{
 		buffer.clear(i, 0, buffer.getNumSamples());
 	}
-
+	std::lock_guard<Mutex> guard(mutex);
+	if(_midiFile.getNumTracks() == 0)
+	{
+		return;
+	}
 	auto playHead = getPlayHead();
 	if (!playHead) {
 		return;
@@ -233,11 +236,12 @@ juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 }
 
 //==============================================================================
-void AudioPluginAudioProcessor::loadMidi(const juce::String& path)
+void AudioPluginAudioProcessor::compile(const juce::String& path)
 {
+	std::lock_guard<Mutex> guard(mutex);
 	Compiler compiler;
 	auto version = compiler.getVersionStr();
-	auto compileResult = compiler.compile("E:\\Users\\samba\\workspace\\werckmeister\\rendertests\\tests\\flugaufdemgluecksdrachen_main.sheet");
+	auto compileResult = compiler.compile(path.toStdString());
 	_midiFile.clear();
 	_iteratorTrackMap.clear();
 	juce::MemoryInputStream fs(compileResult.midiData.data(), compileResult.midiData.size(), false);
