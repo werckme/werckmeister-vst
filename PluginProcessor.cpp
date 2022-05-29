@@ -3,6 +3,8 @@
 #include <iostream>
 #include "Compiler.h"
 
+#define LOCK(mutex) std::lock_guard<Mutex> guard(mutex)
+
 //==============================================================================
 AudioPluginAudioProcessor::AudioPluginAudioProcessor()
 	: AudioProcessor(BusesProperties()
@@ -139,17 +141,17 @@ void AudioPluginAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
 	{
 		buffer.clear(i, 0, buffer.getNumSamples());
 	}
-	std::lock_guard<Mutex> guard(mutex);
+	LOCK(mutex);
 	if(_midiFile.getNumTracks() == 0)
 	{
 		return;
 	}
-	auto playHead = getPlayHead();
-	if (!playHead) {
+	auto playHead_ = getPlayHead();
+	if (!playHead_) {
 		return;
 	}
 	juce::AudioPlayHead::CurrentPositionInfo posInfo = {0};
-	playHead->getCurrentPosition(posInfo);
+	playHead_->getCurrentPosition(posInfo);
 	if (!posInfo.isPlaying && _lastIsPlayingState) 
 	{
 		_lastIsPlayingState = false;
@@ -162,7 +164,7 @@ void AudioPluginAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
 	auto beginPosSeconds = posInfo.timeInSeconds;
 	auto endPosSeconds = posInfo.timeInSeconds + ((double)getBlockSize() / getSampleRate());
 
-	for (int trackIdx = 0; trackIdx < _midiFile.getNumTracks(); ++trackIdx)
+	for (size_t trackIdx = 0; trackIdx < (size_t)_midiFile.getNumTracks(); ++trackIdx)
 	{
 		auto track = _midiFile.getTrack(trackIdx);
 		if (track->getNumEvents() == 0) 
@@ -238,18 +240,18 @@ juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 //==============================================================================
 void AudioPluginAudioProcessor::compile(const juce::String& path)
 {
-	std::lock_guard<Mutex> guard(mutex);
 	Compiler compiler;
 	auto version = compiler.getVersionStr();
 	auto compileResult = compiler.compile(path.toStdString());
+	LOCK(mutex);
 	_midiFile.clear();
 	_iteratorTrackMap.clear();
 	juce::MemoryInputStream fs(compileResult.midiData.data(), compileResult.midiData.size(), false);
 	_midiFile.readFrom(fs);
 	_midiFile.convertTimestampTicksToSeconds();
-	auto numTracks = _midiFile.getNumTracks();
+	auto numTracks = (size_t)_midiFile.getNumTracks();
 	_iteratorTrackMap.resize(numTracks);
-	for (int trackIdx = 0; trackIdx < numTracks; ++trackIdx)
+	for (size_t trackIdx = 0; trackIdx < numTracks; ++trackIdx)
 	{
 		auto track = _midiFile.getTrack(trackIdx);
 		_iteratorTrackMap[trackIdx] = track->begin();

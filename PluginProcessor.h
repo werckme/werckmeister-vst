@@ -28,9 +28,9 @@ public:
 	void changeProgramName(int index, const juce::String& newName) override;
 	void getStateInformation(juce::MemoryBlock& destData) override;
 	void setStateInformation(const void* data, int sizeInBytes) override;
-
+	void compile(const juce::String& path);
 private:
-	typedef std::recursive_mutex Mutex;
+	typedef std::mutex Mutex;
 	Mutex mutex;
 	typedef juce::MidiMessageSequence::MidiEventHolder const* const* MidiEventIterator;
 	void sendAllNoteOff(juce::MidiBuffer&);
@@ -38,6 +38,5 @@ private:
 	IteratorTrackMap _iteratorTrackMap;
 	juce::MidiFile _midiFile;
 	bool _lastIsPlayingState = false;
-	void compile(const juce::String& path);
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioPluginAudioProcessor)
 };

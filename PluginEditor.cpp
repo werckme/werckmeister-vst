@@ -41,5 +41,6 @@ void AudioPluginAudioProcessorEditor::selectSheetFile()
     myChooser->launchAsync (folderChooserFlags, [this] (const FileChooser& chooser)
     {
         File sheetFile (chooser.getResult());
+        processorRef.compile(sheetFile.getFullPathName());
     }); 
 }
