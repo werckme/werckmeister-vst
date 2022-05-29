@@ -31,7 +31,8 @@ target_sources(WerckmeisterVST
     PRIVATE
         PluginEditor.cpp
         PluginProcessor.cpp
-        Compiler.cpp)
+        Compiler.cpp
+        PluginStateData.cpp)
 
 target_compile_definitions(WerckmeisterVST
     PUBLIC

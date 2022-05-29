@@ -4,6 +4,7 @@
 #include <vector>
 #include <thread>
 #include <list>
+#include "PluginStateData.h"
 
 class AudioPluginAudioProcessor : public juce::AudioProcessor
 {
@@ -31,6 +32,7 @@ public:
 	void setStateInformation(const void* data, int sizeInBytes) override;
 	void compile(const juce::String& path);
 private:
+	PluginStateData pluginStateData;
 	typedef std::mutex Mutex;
 	struct NoteOffStackItem 
 	{

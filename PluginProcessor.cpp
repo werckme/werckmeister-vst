@@ -125,9 +125,9 @@ bool AudioPluginAudioProcessor::isBusesLayoutSupported(const BusesLayout& layout
 
 void AudioPluginAudioProcessor::sendAllNoteOff(juce::MidiBuffer& midiMessages)
 {
-	for (int ch = 1; ch <= 16; ++ch)
+	for (NoteOffStack::iterator it = noteOffStack.begin(); it != noteOffStack.end(); ++it)
 	{
-		midiMessages.addEvent(juce::MidiMessage::allNotesOff(ch), 0);
+		midiMessages.addEvent(*it->noteOff, 0);
 	}
 	noteOffStack.clear();
 }
@@ -254,17 +254,17 @@ juce::AudioProcessorEditor* AudioPluginAudioProcessor::createEditor()
 
 void AudioPluginAudioProcessor::getStateInformation(juce::MemoryBlock& destData)
 {
-	// You should use this method to store your parameters in the memory block.
-	// You could do that either as raw data, or use the XML or ValueTree classes
-	// as intermediaries to make it easy to save and load complex data.
-	juce::ignoreUnused(destData);
+	writeStateData(pluginStateData, destData);
 }
 
 void AudioPluginAudioProcessor::setStateInformation(const void* data, int sizeInBytes)
 {
-	// You should use this method to restore your parameters from this memory block,
-	// whose contents will have been created by the getStateInformation() call.
-	juce::ignoreUnused(data, sizeInBytes);
+	pluginStateData = readStateData(data, sizeInBytes);
+	if (!pluginStateData.isValid)
+	{
+		return;
+	}
+	compile(pluginStateData.sheetPath);
 }
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
@@ -274,9 +274,18 @@ juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 
 void AudioPluginAudioProcessor::compile(const juce::String& path)
 {
+	if (path.length() == 0)
+	{
+		return;
+	}
+	if (!juce::File(path).exists())
+	{
+		return;
+	}
 	Compiler compiler;
 	auto version = compiler.getVersionStr();
 	auto compileResult = compiler.compile(path.toStdString());
+	pluginStateData.sheetPath = path.toStdString();
 	LOCK(mutex);
 	_midiFile.clear();
 	_iteratorTrackMap.clear();
