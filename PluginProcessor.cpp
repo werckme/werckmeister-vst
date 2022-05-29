@@ -129,19 +129,20 @@ void AudioPluginAudioProcessor::sendAllNoteOff(juce::MidiBuffer& midiMessages)
 	{
 		midiMessages.addEvent(juce::MidiMessage::allNotesOff(ch), 0);
 	}
+	noteOffStack.clear();
 }
 
 void AudioPluginAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
 	juce::MidiBuffer& midiMessages)
 {
 	juce::ScopedNoDenormals noDenormals;
-	auto totalNumInputChannels = getTotalNumInputChannels();
 	auto totalNumOutputChannels = getTotalNumOutputChannels();
-	for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
+	for (auto i = 0; i < totalNumOutputChannels; ++i)
 	{
 		buffer.clear(i, 0, buffer.getNumSamples());
 	}
 	LOCK(mutex);
+	processNoteOffStack(midiMessages);
 	if(_midiFile.getNumTracks() == 0)
 	{
 		return;
@@ -193,9 +194,26 @@ void AudioPluginAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
 				break;
 			}
 			int sampleOffset = std::max<double>(0.0, (eventTimeStamp - beginPosSeconds) * getSampleRate());
-			if (eventTimeStamp >= beginPosSeconds && eventTimeStamp <= endPosSeconds) 
+			bool isSendMessage = !midiMessage.isNoteOff() && (eventTimeStamp >= beginPosSeconds && eventTimeStamp <= endPosSeconds);
+			if (isSendMessage) 
 			{
 				midiMessages.addEvent(midiMessage, (int)sampleOffset);
+				auto corrospondingNoteOff = (*eventIt)->noteOffObject;
+				if (corrospondingNoteOff)
+				{
+					const auto &noteOffMidiMessage = corrospondingNoteOff->message;
+					auto noteOffSampleOffset = noteOffMidiMessage.getTimeStamp() * getSampleRate();
+					noteOffSampleOffset -= eventTimeStamp * getSampleRate();
+					if (noteOffSampleOffset < getBlockSize()) 
+					{
+						midiMessages.addEvent(noteOffMidiMessage, noteOffSampleOffset);
+					}
+					else
+					{
+						NoteOffStackItem noteOff = {&noteOffMidiMessage, (int)noteOffSampleOffset};
+						noteOffStack.emplace_back(noteOff);
+					}
+				}
 			}
 			++eventIt;
 		}
@@ -203,10 +221,30 @@ void AudioPluginAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
 	}
 }
 
-//==============================================================================
+void AudioPluginAudioProcessor::processNoteOffStack(juce::MidiBuffer& midiMessages)
+{
+	int blockSize_ = getBlockSize();
+	std::list<NoteOffStack::iterator> toRemove;
+	for(NoteOffStack::iterator it = noteOffStack.begin(); it != noteOffStack.end(); ++it)
+	{
+		it->offsetInSamples -= blockSize_;
+		if (it->offsetInSamples > blockSize_)
+		{
+			continue;
+		}
+		midiMessages.addEvent(*it->noteOff, it->offsetInSamples);
+		toRemove.push_back(it);
+	}
+
+	for (auto it : toRemove)
+	{
+		noteOffStack.erase(it);
+	}  
+}
+
 bool AudioPluginAudioProcessor::hasEditor() const
 {
-	return true; // (change this to false if you choose to not supply an editor)
+	return true;
 }
 
 juce::AudioProcessorEditor* AudioPluginAudioProcessor::createEditor()
@@ -214,7 +252,6 @@ juce::AudioProcessorEditor* AudioPluginAudioProcessor::createEditor()
 	return new AudioPluginAudioProcessorEditor(*this);
 }
 
-//==============================================================================
 void AudioPluginAudioProcessor::getStateInformation(juce::MemoryBlock& destData)
 {
 	// You should use this method to store your parameters in the memory block.
@@ -230,14 +267,11 @@ void AudioPluginAudioProcessor::setStateInformation(const void* data, int sizeIn
 	juce::ignoreUnused(data, sizeInBytes);
 }
 
-//==============================================================================
-// This creates new instances of the plugin..
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
 	return new AudioPluginAudioProcessor();
 }
 
-//==============================================================================
 void AudioPluginAudioProcessor::compile(const juce::String& path)
 {
 	Compiler compiler;

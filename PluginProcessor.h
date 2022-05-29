@@ -3,6 +3,7 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <vector>
 #include <thread>
+#include <list>
 
 class AudioPluginAudioProcessor : public juce::AudioProcessor
 {
@@ -31,6 +32,13 @@ public:
 	void compile(const juce::String& path);
 private:
 	typedef std::mutex Mutex;
+	struct NoteOffStackItem 
+	{
+		const juce::MidiMessage* noteOff;
+		int offsetInSamples = 0;
+	};
+	typedef std::list<NoteOffStackItem> NoteOffStack;
+	NoteOffStack noteOffStack;
 	Mutex mutex;
 	typedef juce::MidiMessageSequence::MidiEventHolder const* const* MidiEventIterator;
 	void sendAllNoteOff(juce::MidiBuffer&);
@@ -38,5 +46,6 @@ private:
 	IteratorTrackMap _iteratorTrackMap;
 	juce::MidiFile _midiFile;
 	bool _lastIsPlayingState = false;
+	void processNoteOffStack(juce::MidiBuffer& midiMessages);
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioPluginAudioProcessor)
 };
