@@ -20,6 +20,16 @@
 
 namespace
 {
+    class CompilerException : public std::exception {
+    public:
+        CompilerException(const std::string &what) : _what(what) {}
+        const char* what() const 
+        {
+            return _what.c_str();
+        }
+    private:
+        const std::string _what;
+    };
     std::string exec(const std::string & cmd, const std::vector<std::string> &arguments) {
         std::stringstream ss;
         ss << cmd;
@@ -51,33 +61,73 @@ namespace
         }
         return result;
     }
-}
 
+    void checkForErrors(const juce::var& jsonResult, const std::string &compilerExecutable, const std::string& sheetPath)
+    {
+        const auto& errorMessage = get(jsonResult, "errorMessage", false);
+        if (errorMessage.isVoid())
+        {
+            return;
+        }
+        const auto& sourceFile = get(jsonResult, "sourceFile", false);
+        const auto& position = get(jsonResult, "positionBegin", false);
+        std::stringstream ss;
+        if (!sourceFile.isVoid())
+        {
+            ss << "in file \""<< sourceFile.toString() << "\"";
+        }
+        if (!position.isVoid())
+        {
+            ss << ": position " << position.toString();
+        }
+        ss << "\n" << errorMessage.toString();
+        throw CompilerException(ss.str());
+    }
+}
 
 
 CompiledSheet Compiler::compile(const std::string& sheetPath)
 {
-    CompiledSheet result;
-    auto stringResult = exec(compilerExecutable(), { sheetPath, "--mode=json" });
-    auto jsonResult = juce::JSON::parse(stringResult);
-    const auto &midiInfo = get(jsonResult, "midi");
-    // midi data
-    const auto base64MidiData = get(midiInfo, "midiData").toString();
-    double estimatedByteSize = (base64MidiData.length() * (3.0 / 4.0));
-    juce::MemoryOutputStream midiByteStream((size_t)estimatedByteSize);
-    juce::Base64::convertFromBase64(midiByteStream, base64MidiData);
-    result.midiData.resize(midiByteStream.getDataSize());
-    ::memcpy(result.midiData.data(), midiByteStream.getData(), result.midiData.size());
-    // sources
-    const auto& sources = get(midiInfo, "sources");
-    for (int i = 0; i < sources.size(); ++i) 
+    logger.log(LogLambda(log << "Compiling: \n" << "sheetc " << sheetPath));
+    try 
     {
-        const auto& sourceId = get(sources[i], "sourceId");
-        const auto& path = get(sources[i], "path");
-        result.sources.push_back({sourceId.toString().toStdString(), path.toString().toStdString()});
+        CompiledSheet result;
+        auto stringResult = exec(compilerExecutable(), { sheetPath, "--mode=json" });
+        auto jsonResult = juce::JSON::parse(stringResult);
+        checkForErrors(jsonResult, compilerExecutable(), sheetPath);
+        const auto& midiInfo = get(jsonResult, "midi");
+        // midi data
+        const auto base64MidiData = get(midiInfo, "midiData").toString();
+        double estimatedByteSize = (base64MidiData.length() * (3.0 / 4.0));
+        juce::MemoryOutputStream midiByteStream((size_t)estimatedByteSize);
+        juce::Base64::convertFromBase64(midiByteStream, base64MidiData);
+        result.midiData.resize(midiByteStream.getDataSize());
+        ::memcpy(result.midiData.data(), midiByteStream.getData(), result.midiData.size());
+        logger.log(LogLambda(log << "MIDI data created: " << result.midiData.size() << " Bytes"));
+        // sources
+        const auto& sources = get(midiInfo, "sources");
+        for (int i = 0; i < sources.size(); ++i)
+        {
+            const auto& sourceId = get(sources[i], "sourceId");
+            const auto& path = get(sources[i], "path");
+            result.sources.push_back({ sourceId.toString().toStdString(), path.toString().toStdString() });
+        }
+        return result;
     }
+    catch (const CompilerException& ex)
+    {
+        logger.error(LogLambda(log << ex.what()));
+    }
+    catch (const std::exception& ex)
+    {
+        logger.error(LogLambda(log << "FAILED: " << ex.what()));
+    }
+    catch (...)
+    {
+        logger.error(LogLambda(log << "FAILED: unkown error"));
+    }
+    return CompiledSheet();
 
-    return result;
 }
 
 std::string Compiler::getVersionStr()

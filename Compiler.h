@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include "ILogger.h"
 
 struct Source
 {
@@ -18,8 +19,10 @@ struct CompiledSheet
 class Compiler 
 {
 public:
+    Compiler(ILogger &logger) : logger(logger) {}
     CompiledSheet compile(const std::string &sheetPath);
     std::string getVersionStr();
 private:
-    std::string compilerExecutable() const;
+    ILogger& logger;
+    inline std::string compilerExecutable() const;
 };
