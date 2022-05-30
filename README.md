@@ -4,9 +4,7 @@ The official werckmeister VST Plugin
 
 ## TODO
 * CI/CD integration
-* rember last sheet path
-* error handling
-* compiler log output
+* compiler not found handling
 * watching related files
 * UI Polishing
 
