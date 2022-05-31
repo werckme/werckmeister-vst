@@ -22,11 +22,18 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor (AudioPluginAud
     recompileBtn.onClick = std::bind(&AudioPluginAudioProcessorEditor::recompile, this);
 
     //
-    console.setBounds(5, 60, getWidth() - 5 - 5, getHeight() - 60 - 5);
+    trackFilterView.setViewedComponent(&trackFilter, false);
+    trackFilter.setBounds(5, 60, getWidth() - 5 - 5, 92);
+    trackFilterView.setBounds(5, 60, getWidth() - 5 - 5, 100);
+    addAndMakeVisible(trackFilterView);
+
+    //
+    console.setBounds(5, 60 + 100 + 5, getWidth() - 5 - 5, getHeight() - 200);
     console.setMultiLine(true);
     console.setEnabled(false);
     addAndMakeVisible(console);
     
+
     //
     writeLine(juce::String("Werckmeister VST ") + JucePlugin_VersionString);
     const auto &logCache = processorRef.getLogCache();
@@ -47,6 +54,7 @@ void AudioPluginAudioProcessorEditor::paint(juce::Graphics& g)
 
 void AudioPluginAudioProcessorEditor::resized()
 {
+    trackFilterView.setBounds(trackFilterView.getX(), trackFilterView.getY(), trackFilter.getWidth(), trackFilterView.getHeight());
 }
 
 void AudioPluginAudioProcessorEditor::recompile()

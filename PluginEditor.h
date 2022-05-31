@@ -1,6 +1,8 @@
 #pragma once
 
 #include "PluginProcessor.h"
+#include <memory>
+#include "FilterComponent.h"
 
 //==============================================================================
 class AudioPluginAudioProcessorEditor  : public juce::AudioProcessorEditor
@@ -18,6 +20,8 @@ private:
     juce::TextEditor console;
     juce::TextButton findSheetFileBtn;
     juce::TextButton recompileBtn;
+    juce::Viewport trackFilterView;
+    FilterComponent trackFilter;
     AudioPluginAudioProcessor& processorRef;
     void selectSheetFile();
     void recompile();

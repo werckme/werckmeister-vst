@@ -88,7 +88,7 @@ namespace
 
 CompiledSheet Compiler::compile(const std::string& sheetPath)
 {
-    logger.log(LogLambda(log << "Compiling: \n" << "sheetc " << sheetPath));
+    logger.log(LogLambda(log << "Compile: \"sheetc " << sheetPath << "\""));
     try 
     {
         CompiledSheet result;

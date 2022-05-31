@@ -1,6 +1,7 @@
-#include "PluginProcessor.h"
-#include "PluginEditor.h"
 #include <iostream>
+#include <ctime>
+#include "PluginEditor.h"
+#include "PluginProcessor.h"
 #include "Compiler.h"
 
 #define LOCK(mutex) std::lock_guard<Mutex> guard(mutex)
@@ -306,6 +307,18 @@ void AudioPluginAudioProcessor::compile(const juce::String& path)
 void AudioPluginAudioProcessor::log(ILogger::LogFunction fLog)
 {
 	std::stringstream logStream;
+	std::time_t t = std::time(0);   // get time now
+	std::tm* now = std::localtime(&t);
+	logStream.fill('0');
+	logStream << "[" 
+		<< std::setw(2) << now->tm_hour
+		<< ":" 
+		<< std::setw(2) << now->tm_min
+		<< ":" 
+		<< std::setw(2) << now->tm_min
+		<< ":" 
+		<< std::setw(2) << now->tm_sec
+		<< "] ";
 	fLog(logStream);
 	
 	auto editor = dynamic_cast<AudioPluginAudioProcessorEditor*>(getActiveEditor());
