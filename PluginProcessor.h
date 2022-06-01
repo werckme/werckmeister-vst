@@ -7,11 +7,11 @@
 #include "PluginStateData.h"
 #include "ILogger.h"
 
-
 class AudioPluginAudioProcessor : public juce::AudioProcessor, public ILogger
 {
 public:
 	typedef std::list<std::string> LogCache;
+	typedef std::vector<std::string> TrackNames;
 	AudioPluginAudioProcessor();
 	~AudioPluginAudioProcessor() override;
 	void prepareToPlay(double sampleRate, int samplesPerBlock) override;
@@ -40,20 +40,22 @@ public:
 	void warn(ILogger::LogFunction f) override { log(f); }
 	void error(ILogger::LogFunction f) override { log(f); }
 	const LogCache& getLogCache() const { return logCache; }
+	TrackNames trackNames;
+
 private:
-	PluginStateData pluginStateData;
-	typedef std::mutex Mutex;
-	struct NoteOffStackItem 
+	struct NoteOffStackItem
 	{
 		const juce::MidiMessage* noteOff;
 		int offsetInSamples = 0;
 	};
+	typedef std::mutex Mutex;
 	typedef std::list<NoteOffStackItem> NoteOffStack;
+	typedef juce::MidiMessageSequence::MidiEventHolder const* const* MidiEventIterator;
+	typedef std::vector<MidiEventIterator> IteratorTrackMap;
+	PluginStateData pluginStateData;
 	NoteOffStack noteOffStack;
 	Mutex processMutex;
-	typedef juce::MidiMessageSequence::MidiEventHolder const* const* MidiEventIterator;
 	void sendAllNoteOff(juce::MidiBuffer&);
-	typedef std::vector<MidiEventIterator> IteratorTrackMap;
 	IteratorTrackMap _iteratorTrackMap;
 	juce::MidiFile _midiFile;
 	bool _lastIsPlayingState = false;

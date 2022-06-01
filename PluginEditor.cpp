@@ -43,6 +43,11 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor (AudioPluginAud
     }
 }
 
+void AudioPluginAudioProcessorEditor::tracksChanged()
+{
+
+}
+
 AudioPluginAudioProcessorEditor::~AudioPluginAudioProcessorEditor()
 {
 }

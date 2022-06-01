@@ -15,6 +15,7 @@ public:
     void paint (juce::Graphics&) override;
     void resized() override;
     virtual void writeLine(const juce::String&);
+    void tracksChanged();
 private:
     std::unique_ptr<juce::FileChooser> myChooser;
     juce::TextEditor console;

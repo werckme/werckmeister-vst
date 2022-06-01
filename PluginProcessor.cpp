@@ -297,10 +297,27 @@ void AudioPluginAudioProcessor::compile(const juce::String& path)
 	_midiFile.convertTimestampTicksToSeconds();
 	auto numTracks = (size_t)_midiFile.getNumTracks();
 	_iteratorTrackMap.resize(numTracks);
+	trackNames.resize(numTracks, "Unnamed");
 	for (size_t trackIdx = 0; trackIdx < numTracks; ++trackIdx)
 	{
 		auto track = _midiFile.getTrack((int)trackIdx);
 		_iteratorTrackMap[trackIdx] = track->begin();
+		for (auto eventIt = track->begin(); eventIt != track->end(); ++eventIt)
+		{
+			const auto& midiMessage = (*eventIt)->message;
+			if(!midiMessage.isTrackNameEvent()) 
+			{
+				continue;
+			}
+			trackNames[trackIdx] = midiMessage.getTextFromTextMetaEvent().toStdString() 
+				+ "(" + std::to_string(trackIdx) + ")";
+			break;
+		}
+	}
+	auto editor = dynamic_cast<AudioPluginAudioProcessorEditor*>(getActiveEditor());
+	if (editor != nullptr)
+	{
+		editor->tracksChanged();
 	}
 }
 
