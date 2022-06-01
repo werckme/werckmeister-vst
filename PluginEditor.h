@@ -26,5 +26,6 @@ private:
     PluginProcessor& processorRef;
     void selectSheetFile();
     void recompile();
+    void onTrackFilterChanged(int trackIndex, bool filterValue);
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PluginEditor)
 };

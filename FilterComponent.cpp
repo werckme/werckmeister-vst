@@ -24,10 +24,21 @@ void FilterComponent::setItems(const Items& newItems)
 {
 	clear();
 	this->items = newItems;
-	for (const auto& item : this->items)
+	for (int itemIndex = 0; itemIndex < items.size(); ++itemIndex)
 	{
+		const auto& item = items[itemIndex];
 		FilterControlPtr btn = std::make_shared<FilterControl>(item);
-		btn->setToggleState(true, true);
+		std::weak_ptr<FilterControl> wbtn = btn;
+		btn->onClick = [this, itemIndex, wbtn]()
+		{
+			FilterControlPtr btn = wbtn.lock();
+			if (btn == nullptr)
+			{
+				return;
+			}
+			onFilterChanged(itemIndex, btn->getToggleState());
+		};
+		btn->setToggleState(true, false);
 		btn->setBounds(0, 0, 0, 20);
 		btn->changeWidthToFitText();
 		filterControls.push_back(btn);

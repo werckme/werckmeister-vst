@@ -1,13 +1,15 @@
 #pragma once
 #include <string>
 #include <juce_core/juce_core.h>
-#include <vector>
+#include <unordered_map>
 
 struct PluginStateData 
 {
+    typedef int TrackIndex;
+    typedef std::unordered_set<TrackIndex> MutedTracks;
     bool isValid = false;
     std::string sheetPath;
-    std::vector<int> mutedTracks;
+    MutedTracks mutedTracks;
 };
 
 void writeStateData(const PluginStateData&, juce::MemoryBlock&);

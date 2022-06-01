@@ -40,6 +40,8 @@ public:
 	void warn(ILogger::LogFunction f) override { log(f); }
 	void error(ILogger::LogFunction f) override { log(f); }
 	const LogCache& getLogCache() const { return logCache; }
+	void onTrackFilterChanged(int trackIndex, bool filterValue);
+	inline bool isMuted(int trackIndex) const;
 	TrackNames trackNames;
 
 private:

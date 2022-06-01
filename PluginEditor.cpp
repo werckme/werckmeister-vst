@@ -24,6 +24,7 @@ PluginEditor::PluginEditor (PluginProcessor& p)
     //
     trackFilterView.setViewedComponent(&trackFilter, false);
     trackFilter.setBounds(5, 60, getWidth() - 5 - 5, 92);
+    trackFilter.onFilterChanged = std::bind(&PluginEditor::onTrackFilterChanged, this, std::placeholders::_1, std::placeholders::_2);
     trackFilterView.setBounds(5, 60, getWidth() - 5 - 5, 100);
     addAndMakeVisible(trackFilterView);
 
@@ -42,6 +43,11 @@ PluginEditor::PluginEditor (PluginProcessor& p)
         writeLine(str);
     }
     tracksChanged();
+}
+
+void PluginEditor::onTrackFilterChanged(int trackIndex, bool filterValue)
+{
+    processorRef.onTrackFilterChanged(trackIndex, filterValue);
 }
 
 void PluginEditor::tracksChanged()

@@ -165,6 +165,10 @@ void PluginProcessor::processBlock(juce::AudioBuffer<float>& buffer,
 
 	for (size_t trackIdx = 0; trackIdx < (size_t)_midiFile.getNumTracks(); ++trackIdx)
 	{
+		if (isMuted(trackIdx))
+		{
+			continue;
+		}
 		auto track = _midiFile.getTrack((int)trackIdx);
 		if (track->getNumEvents() == 0) 
 		{
@@ -292,6 +296,7 @@ void PluginProcessor::compile(const juce::String& path)
 	LOCK(processMutex);
 	_midiFile.clear();
 	_iteratorTrackMap.clear();
+	pluginStateData.mutedTracks.clear();
 	juce::MemoryInputStream fs(compileResult.midiData.data(), compileResult.midiData.size(), false);
 	_midiFile.readFrom(fs);
 	_midiFile.convertTimestampTicksToSeconds();
@@ -350,4 +355,19 @@ void PluginProcessor::log(ILogger::LogFunction fLog)
 	}
 	juce::String line(logStream.str());
 	editor->writeLine(line);
+}
+
+void PluginProcessor::onTrackFilterChanged(int trackIndex, bool filterValue)
+{
+	if (!filterValue)
+	{
+		pluginStateData.mutedTracks.insert(trackIndex);
+		return;
+	}
+	pluginStateData.mutedTracks.erase(trackIndex);
+}
+
+bool PluginProcessor::isMuted(int trackIndex) const
+{
+	return pluginStateData.mutedTracks.find(trackIndex) != pluginStateData.mutedTracks.end();
 }
