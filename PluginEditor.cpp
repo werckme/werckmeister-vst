@@ -4,7 +4,7 @@
 #include <iostream>
 
 //==============================================================================
-AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor (AudioPluginAudioProcessor& p)
+PluginEditor::PluginEditor (PluginProcessor& p)
     : AudioProcessorEditor (&p), processorRef (p)
 {
     setSize(800, 600);
@@ -13,13 +13,13 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor (AudioPluginAud
     findSheetFileBtn.setButtonText("Open Sheet File");
     findSheetFileBtn.setBounds(5, 5, 150, 50);
     addAndMakeVisible(findSheetFileBtn);
-    findSheetFileBtn.onClick = std::bind(&AudioPluginAudioProcessorEditor::selectSheetFile, this);
+    findSheetFileBtn.onClick = std::bind(&PluginEditor::selectSheetFile, this);
     
     //
     recompileBtn.setButtonText("Recompile!");
     recompileBtn.setBounds(165, 5, 150, 50);
     addAndMakeVisible(recompileBtn);
-    recompileBtn.onClick = std::bind(&AudioPluginAudioProcessorEditor::recompile, this);
+    recompileBtn.onClick = std::bind(&PluginEditor::recompile, this);
 
     //
     trackFilterView.setViewedComponent(&trackFilter, false);
@@ -41,33 +41,35 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor (AudioPluginAud
     {
         writeLine(str);
     }
+    tracksChanged();
 }
 
-void AudioPluginAudioProcessorEditor::tracksChanged()
+void PluginEditor::tracksChanged()
 {
-
+    trackFilter.setItems(processorRef.trackNames);
+    this->setBounds(getBounds());
 }
 
-AudioPluginAudioProcessorEditor::~AudioPluginAudioProcessorEditor()
+PluginEditor::~PluginEditor()
 {
 }
 
-void AudioPluginAudioProcessorEditor::paint(juce::Graphics& g)
+void PluginEditor::paint(juce::Graphics& g)
 {
     g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
 }
 
-void AudioPluginAudioProcessorEditor::resized()
+void PluginEditor::resized()
 {
     trackFilterView.setBounds(trackFilterView.getX(), trackFilterView.getY(), trackFilter.getWidth(), trackFilterView.getHeight());
 }
 
-void AudioPluginAudioProcessorEditor::recompile()
+void PluginEditor::recompile()
 {
     processorRef.reCompile();
 }
 
-void AudioPluginAudioProcessorEditor::selectSheetFile()
+void PluginEditor::selectSheetFile()
 {
     using namespace juce;
     myChooser = std::make_unique<FileChooser> ("Find your sheet file",
@@ -83,7 +85,7 @@ void AudioPluginAudioProcessorEditor::selectSheetFile()
     }); 
 }
 
-void AudioPluginAudioProcessorEditor::writeLine(const juce::String& line)
+void PluginEditor::writeLine(const juce::String& line)
 {
     auto newLine = (console.getText() + "\n" + line).trim();
     console.setText(newLine);

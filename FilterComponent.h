@@ -7,7 +7,7 @@
 #include <vector>
 
 //==============================================================================
-class FilterComponent : public juce::Component
+class FilterComponent : public juce::Component, public juce::AsyncUpdater
 {
 public:
     typedef std::vector<std::string> Items;
@@ -18,8 +18,10 @@ public:
     void paint (juce::Graphics&) override;
     void resized() override;
     void setItems(const Items& items);
+    void clear();
     const Items& getItems() const { return items; }
 private:
+    void handleAsyncUpdate() override;
     juce::FlexBox flexBox;
     typedef std::vector<FilterControlPtr> FilterControls;
     Items items;

@@ -6,7 +6,7 @@
 
 #define LOCK(mutex) std::lock_guard<Mutex> guard(mutex)
 
-AudioPluginAudioProcessor::AudioPluginAudioProcessor()
+PluginProcessor::PluginProcessor()
 	: AudioProcessor(BusesProperties()
 #if ! JucePlugin_IsMidiEffect
 #if ! JucePlugin_IsSynth
@@ -18,16 +18,16 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
 {
 }
 
-AudioPluginAudioProcessor::~AudioPluginAudioProcessor()
+PluginProcessor::~PluginProcessor()
 {
 }
 
-const juce::String AudioPluginAudioProcessor::getName() const
+const juce::String PluginProcessor::getName() const
 {
 	return JucePlugin_Name;
 }
 
-bool AudioPluginAudioProcessor::acceptsMidi() const
+bool PluginProcessor::acceptsMidi() const
 {
 #if JucePlugin_WantsMidiInput
 	return true;
@@ -36,7 +36,7 @@ bool AudioPluginAudioProcessor::acceptsMidi() const
 #endif
 }
 
-bool AudioPluginAudioProcessor::producesMidi() const
+bool PluginProcessor::producesMidi() const
 {
 #if JucePlugin_ProducesMidiOutput
 	return true;
@@ -45,7 +45,7 @@ bool AudioPluginAudioProcessor::producesMidi() const
 #endif
 }
 
-bool AudioPluginAudioProcessor::isMidiEffect() const
+bool PluginProcessor::isMidiEffect() const
 {
 #if JucePlugin_IsMidiEffect
 	return true;
@@ -54,50 +54,50 @@ bool AudioPluginAudioProcessor::isMidiEffect() const
 #endif
 }
 
-double AudioPluginAudioProcessor::getTailLengthSeconds() const
+double PluginProcessor::getTailLengthSeconds() const
 {
 	return 0.0;
 }
 
-int AudioPluginAudioProcessor::getNumPrograms()
+int PluginProcessor::getNumPrograms()
 {
 	return 1;   // NB: some hosts don't cope very well if you tell them there are 0 programs,
 				// so this should be at least 1, even if you're not really implementing programs.
 }
 
-int AudioPluginAudioProcessor::getCurrentProgram()
+int PluginProcessor::getCurrentProgram()
 {
 	return 0;
 }
 
-void AudioPluginAudioProcessor::setCurrentProgram(int index)
+void PluginProcessor::setCurrentProgram(int index)
 {
 	juce::ignoreUnused(index);
 }
 
-const juce::String AudioPluginAudioProcessor::getProgramName(int index)
+const juce::String PluginProcessor::getProgramName(int index)
 {
 	juce::ignoreUnused(index);
 	return {};
 }
 
-void AudioPluginAudioProcessor::changeProgramName(int index, const juce::String& newName)
+void PluginProcessor::changeProgramName(int index, const juce::String& newName)
 {
 	juce::ignoreUnused(index, newName);
 }
 
-void AudioPluginAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
+void PluginProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
 	juce::ignoreUnused(sampleRate, samplesPerBlock);
 }
 
-void AudioPluginAudioProcessor::releaseResources()
+void PluginProcessor::releaseResources()
 {
 	// When playback stops, you can use this as an opportunity to free up any
 	// spare memory, etc.
 }
 
-bool AudioPluginAudioProcessor::isBusesLayoutSupported(const BusesLayout& layouts) const
+bool PluginProcessor::isBusesLayoutSupported(const BusesLayout& layouts) const
 {
 #if JucePlugin_IsMidiEffect
 	juce::ignoreUnused(layouts);
@@ -121,7 +121,7 @@ bool AudioPluginAudioProcessor::isBusesLayoutSupported(const BusesLayout& layout
 #endif
 }
 
-void AudioPluginAudioProcessor::sendAllNoteOff(juce::MidiBuffer& midiMessages)
+void PluginProcessor::sendAllNoteOff(juce::MidiBuffer& midiMessages)
 {
 	for (NoteOffStack::iterator it = noteOffStack.begin(); it != noteOffStack.end(); ++it)
 	{
@@ -130,7 +130,7 @@ void AudioPluginAudioProcessor::sendAllNoteOff(juce::MidiBuffer& midiMessages)
 	noteOffStack.clear();
 }
 
-void AudioPluginAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
+void PluginProcessor::processBlock(juce::AudioBuffer<float>& buffer,
 	juce::MidiBuffer& midiMessages)
 {
 	juce::ScopedNoDenormals noDenormals;
@@ -219,7 +219,7 @@ void AudioPluginAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
 	}
 }
 
-void AudioPluginAudioProcessor::processNoteOffStack(juce::MidiBuffer& midiMessages)
+void PluginProcessor::processNoteOffStack(juce::MidiBuffer& midiMessages)
 {
 	int blockSize_ = getBlockSize();
 	std::list<NoteOffStack::iterator> toRemove;
@@ -240,22 +240,22 @@ void AudioPluginAudioProcessor::processNoteOffStack(juce::MidiBuffer& midiMessag
 	}  
 }
 
-bool AudioPluginAudioProcessor::hasEditor() const
+bool PluginProcessor::hasEditor() const
 {
 	return true;
 }
 
-juce::AudioProcessorEditor* AudioPluginAudioProcessor::createEditor()
+juce::AudioProcessorEditor* PluginProcessor::createEditor()
 {
-	return new AudioPluginAudioProcessorEditor(*this);
+	return new PluginEditor(*this);
 }
 
-void AudioPluginAudioProcessor::getStateInformation(juce::MemoryBlock& destData)
+void PluginProcessor::getStateInformation(juce::MemoryBlock& destData)
 {
 	writeStateData(pluginStateData, destData);
 }
 
-void AudioPluginAudioProcessor::setStateInformation(const void* data, int sizeInBytes)
+void PluginProcessor::setStateInformation(const void* data, int sizeInBytes)
 {
 	pluginStateData = readStateData(data, sizeInBytes);
 	if (!pluginStateData.isValid)
@@ -267,15 +267,15 @@ void AudioPluginAudioProcessor::setStateInformation(const void* data, int sizeIn
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
-	return new AudioPluginAudioProcessor();
+	return new PluginProcessor();
 }
 
-void AudioPluginAudioProcessor::reCompile()
+void PluginProcessor::reCompile()
 {
 	compile(pluginStateData.sheetPath);
 }
 
-void AudioPluginAudioProcessor::compile(const juce::String& path)
+void PluginProcessor::compile(const juce::String& path)
 {
 	if (path.length() == 0)
 	{
@@ -297,7 +297,7 @@ void AudioPluginAudioProcessor::compile(const juce::String& path)
 	_midiFile.convertTimestampTicksToSeconds();
 	auto numTracks = (size_t)_midiFile.getNumTracks();
 	_iteratorTrackMap.resize(numTracks);
-	trackNames.resize(numTracks, "Unnamed");
+	trackNames.resize(numTracks);
 	for (size_t trackIdx = 0; trackIdx < numTracks; ++trackIdx)
 	{
 		auto track = _midiFile.getTrack((int)trackIdx);
@@ -313,15 +313,19 @@ void AudioPluginAudioProcessor::compile(const juce::String& path)
 				+ "(" + std::to_string(trackIdx) + ")";
 			break;
 		}
+		if (trackNames[trackIdx].empty())
+		{
+			trackNames[trackIdx] = std::string("Unnamed Track(" + std::to_string(trackIdx) + ")");
+		}
 	}
-	auto editor = dynamic_cast<AudioPluginAudioProcessorEditor*>(getActiveEditor());
+	auto editor = dynamic_cast<PluginEditor*>(getActiveEditor());
 	if (editor != nullptr)
 	{
 		editor->tracksChanged();
 	}
 }
 
-void AudioPluginAudioProcessor::log(ILogger::LogFunction fLog)
+void PluginProcessor::log(ILogger::LogFunction fLog)
 {
 	std::stringstream logStream;
 	std::time_t t = std::time(0);   // get time now
@@ -338,7 +342,7 @@ void AudioPluginAudioProcessor::log(ILogger::LogFunction fLog)
 		<< "] ";
 	fLog(logStream);
 	
-	auto editor = dynamic_cast<AudioPluginAudioProcessorEditor*>(getActiveEditor());
+	auto editor = dynamic_cast<PluginEditor*>(getActiveEditor());
 	if (editor == nullptr) 
 	{
 		logCache.push_back(logStream.str());

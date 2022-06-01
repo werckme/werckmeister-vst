@@ -5,11 +5,11 @@
 #include "FilterComponent.h"
 
 //==============================================================================
-class AudioPluginAudioProcessorEditor  : public juce::AudioProcessorEditor
+class PluginEditor  : public juce::AudioProcessorEditor
 {
 public:
-    explicit AudioPluginAudioProcessorEditor (AudioPluginAudioProcessor&);
-    virtual ~AudioPluginAudioProcessorEditor() override;
+    explicit PluginEditor (PluginProcessor&);
+    virtual ~PluginEditor() override;
 
     //==============================================================================
     void paint (juce::Graphics&) override;
@@ -23,8 +23,8 @@ private:
     juce::TextButton recompileBtn;
     juce::Viewport trackFilterView;
     FilterComponent trackFilter;
-    AudioPluginAudioProcessor& processorRef;
+    PluginProcessor& processorRef;
     void selectSheetFile();
     void recompile();
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioPluginAudioProcessorEditor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PluginEditor)
 };

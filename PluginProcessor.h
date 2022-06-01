@@ -7,13 +7,13 @@
 #include "PluginStateData.h"
 #include "ILogger.h"
 
-class AudioPluginAudioProcessor : public juce::AudioProcessor, public ILogger
+class PluginProcessor : public juce::AudioProcessor, public ILogger
 {
 public:
 	typedef std::list<std::string> LogCache;
 	typedef std::vector<std::string> TrackNames;
-	AudioPluginAudioProcessor();
-	~AudioPluginAudioProcessor() override;
+	PluginProcessor();
+	~PluginProcessor() override;
 	void prepareToPlay(double sampleRate, int samplesPerBlock) override;
 	void releaseResources() override;
 	bool isBusesLayoutSupported(const BusesLayout& layouts) const override;
@@ -61,5 +61,5 @@ private:
 	bool _lastIsPlayingState = false;
 	void processNoteOffStack(juce::MidiBuffer& midiMessages);
 	LogCache logCache;
-	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioPluginAudioProcessor)
+	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PluginProcessor)
 };

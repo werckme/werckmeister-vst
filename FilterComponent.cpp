@@ -7,22 +7,46 @@ FilterComponent::FilterComponent()
 	flexBox.alignContent = juce::FlexBox::AlignContent::flexStart;
 	flexBox.alignItems = juce::FlexBox::AlignItems::flexStart;
 	flexBox.justifyContent = juce::FlexBox::JustifyContent::flexStart;
-	for (int i = 0; i < 50; ++i) items.push_back("Track " + std::to_string(i));
-	for (const auto& item : items)
+}
+
+void FilterComponent::clear()
+{
+	for (const auto& control : filterControls)
+	{
+		removeChildComponent(control.get());
+	}
+	items.clear();
+	filterControls.clear();
+	flexBox.items.clear();
+}
+
+void FilterComponent::setItems(const Items& newItems)
+{
+	clear();
+	this->items = newItems;
+	for (const auto& item : this->items)
 	{
 		FilterControlPtr btn = std::make_shared<FilterControl>(item);
+		btn->setToggleState(true, true);
 		btn->setBounds(0, 0, 0, 20);
 		btn->changeWidthToFitText();
 		filterControls.push_back(btn);
-		juce::FlexItem flexItem(btn->getWidth(), btn->getHeight(), *btn);
+		juce::FlexItem flexItem((float)btn->getWidth(), (float)btn->getHeight(), *btn);
 		flexItem.margin = juce::FlexItem::Margin(5);
 		flexBox.items.add(flexItem);
 		addAndMakeVisible(*btn);
 	}
+	triggerAsyncUpdate();
+}
+
+void FilterComponent::handleAsyncUpdate()
+{
+	resized();
 }
 
 void FilterComponent::paint(juce::Graphics&)
 {
+	
 }
 
 void FilterComponent::resized() 
