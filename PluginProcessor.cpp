@@ -2,7 +2,7 @@
 #include <ctime>
 #include "PluginEditor.h"
 #include "PluginProcessor.h"
-#include "Compiler.h"
+#include <algorithm>
 
 #define LOCK(mutex) std::lock_guard<Mutex> guard(mutex)
 
@@ -16,9 +16,16 @@ PluginProcessor::PluginProcessor()
 #endif
 	)
 {
+	fileWatcher.startThread();
+	fileWatcher.onFileChanged = std::bind(&PluginProcessor::reCompile, this);
 }
 
 PluginProcessor::~PluginProcessor()
+{
+	fileWatcher.stopThread(3000);
+}
+
+void PluginProcessor::releaseResources()
 {
 }
 
@@ -87,9 +94,6 @@ void PluginProcessor::prepareToPlay(double, int)
 {
 }
 
-void PluginProcessor::releaseResources()
-{
-}
 
 bool PluginProcessor::isBusesLayoutSupported(const BusesLayout& layouts) const
 {
@@ -268,6 +272,19 @@ void PluginProcessor::reCompile()
 	compile(pluginStateData.sheetPath);
 }
 
+void PluginProcessor::updateFileWatcher(const CompiledSheet& compiledSheet)
+{
+	if (compiledSheet.sources.empty()) 
+	{
+		return;
+	}
+	const auto& sources = compiledSheet.sources;
+	FileWatcher::FileList filesToWatch;
+	filesToWatch.resize(compiledSheet.sources.size());
+	std::transform(sources.begin(), sources.end(), filesToWatch.begin(), [](const Source& source) { return source.path; });
+	fileWatcher.setFileList(filesToWatch);
+}
+
 void PluginProcessor::compile(const juce::String& path)
 {
 	if (path.length() == 0)
@@ -292,7 +309,6 @@ void PluginProcessor::compile(const juce::String& path)
 	auto numTracks = (size_t)_midiFile.getNumTracks();
 	_iteratorTrackMap.resize(numTracks);
 	trackNames.resize(numTracks);
-	int unnamedTracks = 0;
 	for (size_t trackIdx = 0; trackIdx < numTracks; ++trackIdx)
 	{
 		auto track = _midiFile.getTrack((int)trackIdx);
@@ -304,12 +320,12 @@ void PluginProcessor::compile(const juce::String& path)
 			{
 				continue;
 			}
-			trackNames[trackIdx] = midiMessage.getTextFromTextMetaEvent().toStdString();
+			trackNames[trackIdx] = midiMessage.getTextFromTextMetaEvent().toStdString() + "(" + std::to_string(trackIdx) + ")";
 			break;
 		}
 		if (trackNames[trackIdx].empty())
 		{
-			trackNames[trackIdx] = std::string("Unnamed Track(" + std::to_string(++unnamedTracks) + ")");
+			trackNames[trackIdx] = std::string("Unnamed Track(" + std::to_string(trackIdx) + ")");
 		}
 		applyMutedTrackState(trackIdx);
 	}
@@ -318,6 +334,7 @@ void PluginProcessor::compile(const juce::String& path)
 	{
 		editor->tracksChanged();
 	}
+	updateFileWatcher(compileResult);
 }
 
 void PluginProcessor::log(ILogger::LogFunction fLog)

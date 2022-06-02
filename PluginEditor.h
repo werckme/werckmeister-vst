@@ -3,6 +3,7 @@
 #include "PluginProcessor.h"
 #include <memory>
 #include "FilterComponent.h"
+#include <mutex>
 
 //==============================================================================
 class PluginEditor  : public juce::AudioProcessorEditor
@@ -17,6 +18,10 @@ public:
     virtual void writeLine(const juce::String&);
     void tracksChanged();
 private:
+    bool tracksAreDirty = false;
+    typedef std::recursive_mutex Mutex;
+    Mutex mutex;
+    std::list<juce::String> lineCache;
     std::unique_ptr<juce::FileChooser> myChooser;
     juce::TextEditor console;
     juce::TextButton findSheetFileBtn;

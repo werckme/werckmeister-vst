@@ -7,6 +7,8 @@
 #include <list>
 #include "PluginStateData.h"
 #include "ILogger.h"
+#include "FileWatcher.hpp"
+#include "Compiler.h"
 
 class PluginProcessor : public juce::AudioProcessor, public ILogger
 {
@@ -61,7 +63,9 @@ private:
 	PluginStateData pluginStateData;
 	NoteOffStack noteOffStack;
 	Mutex processMutex;
+	FileWatcher fileWatcher;
 	void sendAllNoteOff(juce::MidiBuffer&);
+	void updateFileWatcher(const CompiledSheet&);
 	IteratorTrackMap _iteratorTrackMap;
 	juce::MidiFile _midiFile;
 	bool _lastIsPlayingState = false;
