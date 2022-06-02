@@ -2,6 +2,7 @@
 
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <vector>
+#include <unordered_set>
 #include <thread>
 #include <list>
 #include "PluginStateData.h"
@@ -10,6 +11,8 @@
 class PluginProcessor : public juce::AudioProcessor, public ILogger
 {
 public:
+	typedef int TrackIndex;
+	typedef std::unordered_set<TrackIndex> MutedTracks;
 	typedef std::list<std::string> LogCache;
 	typedef std::vector<std::string> TrackNames;
 	PluginProcessor();
@@ -43,8 +46,9 @@ public:
 	void onTrackFilterChanged(int trackIndex, bool filterValue);
 	inline bool isMuted(int trackIndex) const;
 	TrackNames trackNames;
-
+	const MutedTracks& getMutedTracks() const { return mutedTracks; }
 private:
+	MutedTracks mutedTracks;
 	struct NoteOffStackItem
 	{
 		const juce::MidiMessage* noteOff;
@@ -62,6 +66,7 @@ private:
 	juce::MidiFile _midiFile;
 	bool _lastIsPlayingState = false;
 	void processNoteOffStack(juce::MidiBuffer& midiMessages);
+	void applyMutedTrackState(int trackIndex);
 	LogCache logCache;
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PluginProcessor)
 };

@@ -5,8 +5,8 @@
 
 struct PluginStateData 
 {
-    typedef int TrackIndex;
-    typedef std::unordered_set<TrackIndex> MutedTracks;
+    typedef std::string TrackName;
+    typedef std::unordered_set<TrackName> MutedTracks;
     bool isValid = false;
     std::string sheetPath;
     MutedTracks mutedTracks;

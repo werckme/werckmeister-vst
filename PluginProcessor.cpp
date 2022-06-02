@@ -70,31 +70,25 @@ int PluginProcessor::getCurrentProgram()
 	return 0;
 }
 
-void PluginProcessor::setCurrentProgram(int index)
+void PluginProcessor::setCurrentProgram(int)
 {
-	juce::ignoreUnused(index);
 }
 
-const juce::String PluginProcessor::getProgramName(int index)
+const juce::String PluginProcessor::getProgramName(int)
 {
-	juce::ignoreUnused(index);
-	return {};
+	return "";
 }
 
-void PluginProcessor::changeProgramName(int index, const juce::String& newName)
+void PluginProcessor::changeProgramName(int, const juce::String&)
 {
-	juce::ignoreUnused(index, newName);
 }
 
-void PluginProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
+void PluginProcessor::prepareToPlay(double, int)
 {
-	juce::ignoreUnused(sampleRate, samplesPerBlock);
 }
 
 void PluginProcessor::releaseResources()
 {
-	// When playback stops, you can use this as an opportunity to free up any
-	// spare memory, etc.
 }
 
 bool PluginProcessor::isBusesLayoutSupported(const BusesLayout& layouts) const
@@ -103,15 +97,10 @@ bool PluginProcessor::isBusesLayoutSupported(const BusesLayout& layouts) const
 	juce::ignoreUnused(layouts);
 	return true;
 #else
-	// This is the place where you check if the layout is supported.
-	// In this template code we only support mono or stereo.
-	// Some plugin hosts, such as certain GarageBand versions, will only
-	// load plugins that support stereo bus layouts.
 	if (layouts.getMainOutputChannelSet() != juce::AudioChannelSet::mono()
 		&& layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo())
 		return false;
 
-	// This checks if the input layout matches the output layout
 #if ! JucePlugin_IsSynth
 	if (layouts.getMainOutputChannelSet() != layouts.getMainInputChannelSet())
 		return false;
@@ -296,13 +285,14 @@ void PluginProcessor::compile(const juce::String& path)
 	LOCK(processMutex);
 	_midiFile.clear();
 	_iteratorTrackMap.clear();
-	pluginStateData.mutedTracks.clear();
+	mutedTracks.clear();
 	juce::MemoryInputStream fs(compileResult.midiData.data(), compileResult.midiData.size(), false);
 	_midiFile.readFrom(fs);
 	_midiFile.convertTimestampTicksToSeconds();
 	auto numTracks = (size_t)_midiFile.getNumTracks();
 	_iteratorTrackMap.resize(numTracks);
 	trackNames.resize(numTracks);
+	int unnamedTracks = 0;
 	for (size_t trackIdx = 0; trackIdx < numTracks; ++trackIdx)
 	{
 		auto track = _midiFile.getTrack((int)trackIdx);
@@ -314,14 +304,14 @@ void PluginProcessor::compile(const juce::String& path)
 			{
 				continue;
 			}
-			trackNames[trackIdx] = midiMessage.getTextFromTextMetaEvent().toStdString() 
-				+ "(" + std::to_string(trackIdx) + ")";
+			trackNames[trackIdx] = midiMessage.getTextFromTextMetaEvent().toStdString();
 			break;
 		}
 		if (trackNames[trackIdx].empty())
 		{
-			trackNames[trackIdx] = std::string("Unnamed Track(" + std::to_string(trackIdx) + ")");
+			trackNames[trackIdx] = std::string("Unnamed Track(" + std::to_string(++unnamedTracks) + ")");
 		}
+		applyMutedTrackState(trackIdx);
 	}
 	auto editor = dynamic_cast<PluginEditor*>(getActiveEditor());
 	if (editor != nullptr)
@@ -361,13 +351,25 @@ void PluginProcessor::onTrackFilterChanged(int trackIndex, bool filterValue)
 {
 	if (!filterValue)
 	{
-		pluginStateData.mutedTracks.insert(trackIndex);
+		mutedTracks.insert(trackIndex);
+		pluginStateData.mutedTracks.insert(trackNames.at(trackIndex));
 		return;
 	}
-	pluginStateData.mutedTracks.erase(trackIndex);
+	mutedTracks.erase(trackIndex);
+	pluginStateData.mutedTracks.erase(trackNames.at(trackIndex));
 }
 
 bool PluginProcessor::isMuted(int trackIndex) const
 {
-	return pluginStateData.mutedTracks.find(trackIndex) != pluginStateData.mutedTracks.end();
+	return mutedTracks.find(trackIndex) != mutedTracks.end();
+}
+
+void PluginProcessor::applyMutedTrackState(int trackIndex)
+{
+	auto trackName = trackNames.at(trackIndex);
+	bool isMuted = pluginStateData.mutedTracks.find(trackName) != pluginStateData.mutedTracks.end();
+	if (isMuted)
+	{
+		mutedTracks.insert(trackIndex);
+	}
 }

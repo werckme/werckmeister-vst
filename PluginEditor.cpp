@@ -33,7 +33,6 @@ PluginEditor::PluginEditor (PluginProcessor& p)
     console.setMultiLine(true);
     console.setEnabled(false);
     addAndMakeVisible(console);
-    
 
     //
     writeLine(juce::String("Werckmeister VST ") + JucePlugin_VersionString);
@@ -54,6 +53,7 @@ void PluginEditor::tracksChanged()
 {
     trackFilter.setItems(processorRef.trackNames);
     this->setBounds(getBounds());
+    setFilterStates();
 }
 
 PluginEditor::~PluginEditor()
@@ -96,4 +96,13 @@ void PluginEditor::writeLine(const juce::String& line)
     auto newLine = (console.getText() + "\n" + line).trim();
     console.setText(newLine);
     console.scrollDown();
+}
+
+void PluginEditor::setFilterStates()
+{
+    for (int trackIndex = 0; trackIndex < trackFilter.getItems().size(); ++trackIndex)
+    {
+        auto state = !processorRef.isMuted(trackIndex);
+        trackFilter.setItemState(trackIndex, state);
+    }
 }

@@ -20,6 +20,7 @@ public:
     void paint (juce::Graphics&) override;
     void resized() override;
     void setItems(const Items& items);
+    void setItemState(int itemIndex, bool state);
     void clear();
     const Items& getItems() const { return items; }
     FilterChangedHandler onFilterChanged = [](int, bool){};

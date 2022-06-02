@@ -2,12 +2,11 @@
 The official werckmeister VST Plugin
 
 
-## TODO
+## TODO MVP
 * CI/CD integration
 * compiler not found handling
 * watching related files
 * UI Polishing
-* Track filter
 
-## Planned Features
+## Future
 * VSCode integration

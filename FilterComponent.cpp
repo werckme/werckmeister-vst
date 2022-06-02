@@ -74,3 +74,9 @@ void FilterComponent::resized()
 	bounds.setWidth(lastControl->getX() + lastControl->getWidth());
 	setBounds(bounds);
 }
+
+void FilterComponent::setItemState(int itemIndex, bool state)
+{
+	auto ctrl = filterControls.at(itemIndex);
+	ctrl->setToggleState(state, false);
+}
