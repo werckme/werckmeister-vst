@@ -1,4 +1,20 @@
 #include "FilterComponent.h"
+#include <algorithm>
+
+namespace 
+{
+	std::string toLower(const std::string& str)
+	{
+		auto copy = str;
+		std::transform(copy.begin(), copy.end(), copy.begin(), ::tolower);
+		return copy;
+	}
+
+	bool contains(const std::string& toSearch, const std::string& toFind)
+	{
+		return toLower(toSearch).find(toFind) < toSearch.length();
+	}
+}
 
 FilterComponent::FilterComponent()
 {
@@ -42,6 +58,12 @@ void FilterComponent::setItems(const Items& newItems)
 		btn->setBounds(0, 0, 0, 20);
 		btn->changeWidthToFitText();
 		filterControls.push_back(btn);
+		bool doNotShow = ::contains(item, "master track");
+		doNotShow |= ::contains(item, "unnamed track");
+		if (doNotShow)
+		{
+			continue;
+		}
 		juce::FlexItem flexItem((float)btn->getWidth(), (float)btn->getHeight(), *btn);
 		flexItem.margin = juce::FlexItem::Margin(5);
 		flexBox.items.add(flexItem);
