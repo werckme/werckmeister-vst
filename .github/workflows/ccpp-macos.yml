@@ -16,6 +16,8 @@ jobs:
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@v2
+    - name: init
+      run: mkdir build    
     - name: update submodules
       run: git submodule update --init --recursive --remote
     - name: configure
