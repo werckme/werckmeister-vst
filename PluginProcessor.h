@@ -46,7 +46,7 @@ public:
 	void error(ILogger::LogFunction f) override { log(f); }
 	const LogCache& getLogCache() const { return logCache; }
 	void onTrackFilterChanged(int trackIndex, bool filterValue);
-	inline bool isMuted(int trackIndex) const;
+	bool isMuted(int trackIndex) const;
 	TrackNames trackNames;
 	const MutedTracks& getMutedTracks() const { return mutedTracks; }
 private:
