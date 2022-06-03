@@ -23,7 +23,7 @@ juce_add_plugin(WerckmeisterVST
     PLUGIN_MANUFACTURER_CODE wmvt               # A four-character manufacturer id with at least one upper-case character
     PLUGIN_CODE Wmvt                            # A unique four-character plugin id with exactly one upper-case character
                                                 # GarageBand 10.3 requires the first letter to be upper-case, and the remaining letters to be lower-case
-    FORMATS AU VST VST3 Standalone                  # The formats to build. Other valid formats are: AAX Unity VST AU AUv3
+    FORMATS AUv3 VST VST3 Standalone                  # The formats to build. Other valid formats are: AAX Unity VST AU AUv3
     PRODUCT_NAME "Werckmeister VST"
     )        # The name of the final executable, which can differ from the target name
 
