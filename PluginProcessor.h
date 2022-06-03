@@ -50,12 +50,14 @@ public:
 	TrackNames trackNames;
 	const MutedTracks& getMutedTracks() const { return mutedTracks; }
 private:
+	bool compilerIsReady = false;
 	MutedTracks mutedTracks;
 	struct NoteOffStackItem
 	{
 		const juce::MidiMessage* noteOff;
 		int offsetInSamples = 0;
 	};
+	void initCompiler();
 	typedef std::mutex Mutex;
 	typedef std::list<NoteOffStackItem> NoteOffStack;
 	typedef juce::MidiMessageSequence::MidiEventHolder const* const* MidiEventIterator;

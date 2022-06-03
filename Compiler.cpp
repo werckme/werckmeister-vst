@@ -20,6 +20,11 @@
 
 namespace
 {
+    std::string __compiler_executable;
+}
+
+namespace
+{
     class CompilerException : public std::exception {
     public:
         CompilerException(const std::string &what) : _what(what) {}
@@ -62,7 +67,7 @@ namespace
         return result;
     }
 
-    void checkForErrors(const juce::var& jsonResult, const std::string &compilerExecutable, const std::string& sheetPath)
+    void checkForErrors(const juce::var& jsonResult, const std::string &, const std::string&)
     {
         const auto& errorMessage = get(jsonResult, "errorMessage", false);
         if (errorMessage.isVoid())
@@ -88,13 +93,14 @@ namespace
 
 CompiledSheet Compiler::compile(const std::string& sheetPath)
 {
-    logger.log(LogLambda(log << "Compile: \"sheetc " << sheetPath << "\""));
+    auto compilerExe = compilerExecutable();
+    logger.log(LogLambda(log << "sheetc" << " \"" << sheetPath << "\""));
     try 
     {
         CompiledSheet result;
-        auto stringResult = exec(compilerExecutable(), { sheetPath, "--mode=json" });
+        auto stringResult = exec(compilerExe, { sheetPath, "--mode=json" });
         auto jsonResult = juce::JSON::parse(stringResult);
-        checkForErrors(jsonResult, compilerExecutable(), sheetPath);
+        checkForErrors(jsonResult, compilerExe, sheetPath);
         const auto& midiInfo = get(jsonResult, "midi");
         // midi data
         const auto base64MidiData = get(midiInfo, "midiData").toString();
@@ -137,5 +143,13 @@ std::string Compiler::getVersionStr()
 
 std::string Compiler::compilerExecutable() const
 {
-    return "sheetc";
+    if (__compiler_executable.empty())
+    {
+#ifdef WIN32
+        __compiler_executable = "sheetc";
+#else
+        __compiler_executable = exec("which", {"sheetc"});
+#endif
+    }
+    return __compiler_executable;
 }

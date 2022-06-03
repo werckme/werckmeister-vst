@@ -2,7 +2,7 @@
 #include "PluginEditor.h"
 #include <functional>
 #include <iostream>
-
+#include "Compiler.h"
 
 //==============================================================================
 PluginEditor::PluginEditor (PluginProcessor& p)

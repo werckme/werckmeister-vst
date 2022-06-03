@@ -18,6 +18,7 @@ PluginProcessor::PluginProcessor()
 {
 	fileWatcher.startThread();
 	fileWatcher.onFileChanged = std::bind(&PluginProcessor::reCompile, this);
+	initCompiler();
 }
 
 PluginProcessor::~PluginProcessor()
@@ -285,8 +286,20 @@ void PluginProcessor::updateFileWatcher(const CompiledSheet& compiledSheet)
 	fileWatcher.setFileList(filesToWatch);
 }
 
+void PluginProcessor::initCompiler()
+{
+	Compiler compiler(*this);
+	auto version = compiler.getVersionStr();
+	info(LogLambda(log << "Compiler: " << compiler.compilerExecutable() << " -- " << version));
+	compilerIsReady = true;
+}
+
 void PluginProcessor::compile(const juce::String& path)
 {
+	if (!compilerIsReady)
+	{
+		return;
+	}
 	if (path.length() == 0)
 	{
 		return;
@@ -296,7 +309,6 @@ void PluginProcessor::compile(const juce::String& path)
 		return;
 	}
 	Compiler compiler(*this);
-	auto version = compiler.getVersionStr();
 	auto compileResult = compiler.compile(path.toStdString());
 	pluginStateData.sheetPath = path.toStdString();
 	LOCK(processMutex);
