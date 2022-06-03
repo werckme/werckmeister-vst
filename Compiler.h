@@ -19,7 +19,7 @@ struct CompiledSheet
 class Compiler 
 {
 public:
-    Compiler(ILogger &logger) : logger(logger) {}
+    Compiler(ILogger &logger_) : logger(logger_) {}
     CompiledSheet compile(const std::string &sheetPath);
     std::string getVersionStr();
 private:

@@ -23,7 +23,7 @@ namespace
     class CompilerException : public std::exception {
     public:
         CompilerException(const std::string &what) : _what(what) {}
-        const char* what() const 
+        virtual const char* what() const throw()
         {
             return _what.c_str();
         }
