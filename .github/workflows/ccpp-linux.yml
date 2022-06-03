@@ -29,12 +29,11 @@ jobs:
     - name: build
       run: cmake --build .
       working-directory: build
-    # - name: pack
-    #   run: cmake --build . --config Release --target package
-    #   working-directory: build
-    # - uses: actions/upload-artifact@v2
-    #   with:
-    #     name: werckmeister-linux-${{ github.sha }}
-    #     path: |
-    #       build/werckmeister-*-Linux.sh
-    #       rendertests/*.mid
+    - uses: actions/upload-artifact@v3
+      with:
+        name: werckmeister-VST-win-vst2-${{ github.sha }}
+        path: build/WerckmeisterVST_artefacts/Release/VST
+    - uses: actions/upload-artifact@v3
+      with:
+        name: werckmeister-VST-win-vst3-${{ github.sha }}
+        path: build/WerckmeisterVST_artefacts/Release/VST3   
