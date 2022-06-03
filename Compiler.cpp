@@ -104,7 +104,7 @@ CompiledSheet Compiler::compile(const std::string& sheetPath)
         const auto& midiInfo = get(jsonResult, "midi");
         // midi data
         const auto base64MidiData = get(midiInfo, "midiData").toString();
-        double estimatedByteSize = (base64MidiData.length() * (3.0 / 4.0));
+        double estimatedByteSize = (base64MidiData.length() * (3.0 / 4.0) + 10);
         juce::MemoryOutputStream midiByteStream((size_t)estimatedByteSize);
         juce::Base64::convertFromBase64(midiByteStream, base64MidiData);
         result.midiData.resize(midiByteStream.getDataSize());
