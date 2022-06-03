@@ -22,7 +22,7 @@ public:
     Compiler(ILogger &logger_) : logger(logger_) {}
     CompiledSheet compile(const std::string &sheetPath);
     std::string getVersionStr();
-    std::string compilerExecutable();
+    std::string compilerExecutable() const;
 private:
     ILogger& logger;
     
