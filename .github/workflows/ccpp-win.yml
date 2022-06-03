@@ -27,12 +27,7 @@ jobs:
     - name: build
       run: cmake --build . --config Release
       working-directory: build
-    # - name: pack
-    #   run: cmake --build . --config Release --target package
-    #   working-directory: build
-    # - uses: actions/upload-artifact@v2
-    #   with:
-    #     name: werckmeister-win-${{ github.sha }}
-    #     path: | 
-    #       build/werckmeister-*-win64.msi
-    #       rendertests/*.mid
+    - uses: actions/upload-artifact@v3
+      with:
+        name: werckmeister-VST-win-${{ github.sha }}
+        path: build/WerckmeisterVST_artefacts
