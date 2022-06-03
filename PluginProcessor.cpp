@@ -321,24 +321,13 @@ void PluginProcessor::compile(const juce::String& path)
 	auto numTracks = (size_t)_midiFile.getNumTracks();
 	_iteratorTrackMap.resize(numTracks);
 	trackNames.resize(numTracks);
+	std::unordered_map<std::string, int> trackAppearances;
+	trackAppearances.reserve(_midiFile.getNumTracks());
 	for (size_t trackIdx = 0; trackIdx < numTracks; ++trackIdx)
 	{
 		auto track = _midiFile.getTrack((int)trackIdx);
 		_iteratorTrackMap[trackIdx] = track->begin();
-		for (auto eventIt = track->begin(); eventIt != track->end(); ++eventIt)
-		{
-			const auto& midiMessage = (*eventIt)->message;
-			if(!midiMessage.isTrackNameEvent()) 
-			{
-				continue;
-			}
-			trackNames[trackIdx] = midiMessage.getTextFromTextMetaEvent().toStdString() + "(" + std::to_string(trackIdx) + ")";
-			break;
-		}
-		if (trackNames[trackIdx].empty())
-		{
-			trackNames[trackIdx] = std::string("Unnamed Track(" + std::to_string(trackIdx) + ")");
-		}
+		findTrackName(trackIdx, trackAppearances);
 		applyMutedTrackState(trackIdx);
 	}
 	auto editor = dynamic_cast<PluginEditor*>(getActiveEditor());
@@ -347,6 +336,38 @@ void PluginProcessor::compile(const juce::String& path)
 		editor->tracksChanged();
 	}
 	updateFileWatcher(compileResult);
+}
+
+void PluginProcessor::findTrackName(size_t trackIndex, std::unordered_map<std::string, int>& trackAppearances)
+{
+	std::string trackName;
+	auto track = _midiFile.getTrack((int)trackIndex);
+	for (auto eventIt = track->begin(); eventIt != track->end(); ++eventIt)
+	{
+		const auto& midiMessage = (*eventIt)->message;
+		if (!midiMessage.isTrackNameEvent())
+		{
+			continue;
+		}
+		trackName = midiMessage.getTextFromTextMetaEvent().toStdString();
+		break;
+	}
+	if (trackName.empty())
+	{
+		trackName = std::string("Unnamed Track");
+	}
+	auto trackNameAppearanceIt = trackAppearances.find(trackName);
+	if (trackNameAppearanceIt == trackAppearances.end())
+	{
+		trackAppearances[trackName] = 1;
+	}
+	else
+	{
+		int trackCount = trackNameAppearanceIt->second + 1;
+		trackAppearances[trackName] = trackCount;
+		trackName = trackName + "(" + std::to_string(trackCount) + ")";
+	}
+	trackNames[trackIndex] = trackName;
 }
 
 void PluginProcessor::log(ILogger::LogFunction fLog)

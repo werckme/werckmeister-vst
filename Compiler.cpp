@@ -145,12 +145,14 @@ std::string Compiler::compilerExecutable() const
 {
     if (__compiler_executable.empty())
     {
-#ifdef JUCE_WIN32
+#ifdef WIN32
         __compiler_executable = "sheetc";
-#elif JUCE_MAC
-        __compiler_executable = "/usr/local/bin/sheetc";
 #else
-        __compiler_executable = exec("which", {"sheetc"}); // does'nt work on mac :-(
+        __compiler_executable = exec("which", {"sheetc"});
+        if (__compiler_executable.empty())
+        {
+            __compiler_executable = "/usr/local/bin/sheetc";
+        }
 #endif
     }
     return __compiler_executable;
