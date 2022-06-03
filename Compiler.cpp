@@ -141,13 +141,13 @@ std::string Compiler::getVersionStr()
     return exec(compilerExecutable(), {"--version"});
 }
 
-std::string Compiler::compilerExecutable() const
+std::string Compiler::compilerExecutable()
 {
 //     if (__compiler_executable.empty())
 //     {
-// #ifdef JUCE_WIN32
+// #if defined(JUCE_WIN32)
 //         __compiler_executable = "sheetc";
-// #elif JUCE_MAC
+// #elif defined (JUCE_MAC)
 //         __compiler_executable = "/usr/local/bin/sheetc";
 // #else
 //         __compiler_executable = exec("which", {"sheetc"}); // does'nt work on mac :-(
