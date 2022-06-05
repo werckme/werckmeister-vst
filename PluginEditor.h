@@ -4,6 +4,7 @@
 #include <memory>
 #include "FilterComponent.h"
 #include <mutex>
+#include "Preferences.h"
 
 //==============================================================================
 class PluginEditor  : public juce::AudioProcessorEditor
@@ -25,12 +26,15 @@ private:
     std::unique_ptr<juce::FileChooser> myChooser;
     juce::TextEditor console;
     juce::TextButton findSheetFileBtn;
+    juce::TextButton preferences;
     juce::TextButton recompileBtn;
     juce::Viewport trackFilterView;
+    std::unique_ptr<Preferences> preferencesComponent;
     FilterComponent trackFilter;
     PluginProcessor& processorRef;
     void selectSheetFile();
     void recompile();
+    void showPreferences();
     void onTrackFilterChanged(int trackIndex, bool filterValue);
     void setFilterStates();
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PluginEditor)

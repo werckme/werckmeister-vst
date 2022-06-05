@@ -3,7 +3,7 @@ execute_process(COMMAND git --work-tree=. log --pretty=format:%h -n 1 OUTPUT_VAR
 execute_process(COMMAND git branch --show-current OUTPUT_VARIABLE GIT_BRANCH_NAME)   
 
 # Project name.
-project(werckmeister-vst VERSION 0.0.1)
+project(werckmeister-vst VERSION 1.0.0)
 
 add_subdirectory(ext/JUCE)  
 
@@ -34,7 +34,8 @@ target_sources(WerckmeisterVST
         Compiler.cpp
         PluginStateData.cpp
         FilterComponent.cpp
-        FileWatcher.cpp)
+        FileWatcher.cpp
+        Preferences.cpp)
 
 target_compile_definitions(WerckmeisterVST
     PUBLIC

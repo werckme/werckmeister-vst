@@ -4,6 +4,7 @@
 #include <iostream>
 #include "Compiler.h"
 
+
 //==============================================================================
 PluginEditor::PluginEditor (PluginProcessor& p)
     : AudioProcessorEditor (&p), processorRef (p)
@@ -21,6 +22,12 @@ PluginEditor::PluginEditor (PluginProcessor& p)
     recompileBtn.setBounds(165, 5, 150, 50);
     addAndMakeVisible(recompileBtn);
     recompileBtn.onClick = std::bind(&PluginEditor::recompile, this);
+
+    //
+    preferences.setButtonText("S");
+    preferences.setBounds(720, 5, 50, 50);
+    preferences.onClick = std::bind(&PluginEditor::showPreferences, this);
+    addAndMakeVisible(preferences);
 
     //
     trackFilterView.setViewedComponent(&trackFilter, false);
@@ -42,6 +49,7 @@ PluginEditor::PluginEditor (PluginProcessor& p)
     {
         writeLine(str);
     }
+
     tracksChanged();
 }
 
@@ -83,7 +91,7 @@ void PluginEditor::selectSheetFile()
                                                File(),
                                                "*.sheet");
  
-    auto folderChooserFlags = FileBrowserComponent::openMode;
+    auto folderChooserFlags = FileBrowserComponent::openMode | FileBrowserComponent::canSelectFiles;
  
     myChooser->launchAsync (folderChooserFlags, [this] (const FileChooser& chooser)
     {
@@ -106,4 +114,19 @@ void PluginEditor::setFilterStates()
         auto state = !processorRef.isMuted(trackIndex);
         trackFilter.setItemState(trackIndex, state);
     }
+}
+
+void PluginEditor::showPreferences()
+{
+    if (!preferencesComponent)
+    {
+        preferencesComponent = std::make_unique<Preferences>();
+    }
+    juce::DialogWindow::LaunchOptions lauchOptions;
+    lauchOptions.dialogTitle = "Werckmeister VST Preferences";
+    lauchOptions.content = juce::OptionalScopedPointer<Component>(preferencesComponent.get(), false);
+    lauchOptions.dialogBackgroundColour = findColour(juce::ResizableWindow::backgroundColourId, true);
+    lauchOptions.resizable = false;
+    lauchOptions.useNativeTitleBar = false;
+    lauchOptions.launchAsync();
 }
