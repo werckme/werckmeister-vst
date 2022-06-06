@@ -49,6 +49,7 @@ public:
 	bool isMuted(int trackIndex) const;
 	TrackNames trackNames;
 	const MutedTracks& getMutedTracks() const { return mutedTracks; }
+	void initCompiler();
 private:
 	bool compilerIsReady = false;
 	MutedTracks mutedTracks;
@@ -58,7 +59,6 @@ private:
 		int offsetInSamples = 0;
 	};
 	void findTrackName(size_t trackIndex, std::unordered_map<std::string, int> &trackAppearancesMap);
-	void initCompiler();
 	typedef std::mutex Mutex;
 	typedef std::list<NoteOffStackItem> NoteOffStack;
 	typedef juce::MidiMessageSequence::MidiEventHolder const* const* MidiEventIterator;

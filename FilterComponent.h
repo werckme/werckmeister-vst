@@ -24,8 +24,8 @@ public:
     void clear();
     const Items& getItems() const { return items; }
     FilterChangedHandler onFilterChanged = [](int, bool){};
-private:
     void handleAsyncUpdate() override;
+private:
     juce::FlexBox flexBox;
     typedef std::vector<FilterControlPtr> FilterControls;
     Items items;

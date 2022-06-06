@@ -35,7 +35,8 @@ target_sources(WerckmeisterVST
         PluginStateData.cpp
         FilterComponent.cpp
         FileWatcher.cpp
-        Preferences.cpp)
+        Preferences.cpp
+        PreferencesData.cpp)
 
 target_compile_definitions(WerckmeisterVST
     PUBLIC

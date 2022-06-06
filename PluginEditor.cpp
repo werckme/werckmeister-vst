@@ -121,7 +121,13 @@ void PluginEditor::showPreferences()
     if (!preferencesComponent)
     {
         preferencesComponent = std::make_unique<Preferences>();
+        preferencesComponent->onPreferencesChanged = [this]()
+        {
+            processorRef.initCompiler();
+            processorRef.reCompile();
+        };
     }
+    preferencesComponent->loadPreferences();
     juce::DialogWindow::LaunchOptions lauchOptions;
     lauchOptions.dialogTitle = "Werckmeister VST Preferences";
     lauchOptions.content = juce::OptionalScopedPointer<Component>(preferencesComponent.get(), false);

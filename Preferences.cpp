@@ -1,6 +1,5 @@
 #include "Preferences.h"
 
-
 Preferences::Preferences()
 {
     int w = 600, h = 250;
@@ -13,12 +12,16 @@ Preferences::Preferences()
     //
     row += 15;
     sheetPathLabelText_2.setBounds(5, row, w - 10, 25);
-    sheetPathLabelText_2.setText("If empty, system search PATH will be used", juce::NotificationType::dontSendNotification);
+    sheetPathLabelText_2.setText("If empty, system search PATH will be used.", juce::NotificationType::dontSendNotification);
     addAndMakeVisible(sheetPathLabelText_2);
 
     // 
     row += 30;
     sheetPath.setBounds(5, row, w - 10, 22);
+    sheetPath.onTextChange = [this]()
+    {
+        preferencesData.binPath = sheetPath.getText().toStdString();
+    };
     addAndMakeVisible(sheetPath);
 
     //
@@ -33,10 +36,25 @@ Preferences::Preferences()
     okBtn.setBounds(w-50 - 5, h - 35, 50, 30);
     okBtn.onClick = std::bind(&Preferences::close, this);
     addAndMakeVisible(okBtn);
+
+    //     
+    auto parentWindow = findParentComponentOfClass<juce::DialogWindow>();
+}
+
+void Preferences::loadPreferences()
+{
+    preferencesData = readPreferencesData();
+    sheetPath.setText(preferencesData.binPath, false);
+}
+
+void Preferences::handleAsyncUpdate()
+{
+    apply();
 }
 
 void Preferences::close()
 {
+    triggerAsyncUpdate();
     auto parentWindow = findParentComponentOfClass<juce::DialogWindow>();
     parentWindow->closeButtonPressed();
 }
@@ -64,4 +82,10 @@ void Preferences::select()
         File sheetFile (chooser.getResult());
         sheetPath.setText(sheetFile.getFullPathName());
     }); 
+}
+
+void Preferences::apply()
+{
+    writePreferencesData(preferencesData);
+    onPreferencesChanged();
 }

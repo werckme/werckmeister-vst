@@ -23,6 +23,7 @@ public:
     CompiledSheet compile(const std::string &sheetPath);
     std::string getVersionStr();
     std::string compilerExecutable() const;
+    void resetExecutablePath();
 private:
     ILogger& logger;
     

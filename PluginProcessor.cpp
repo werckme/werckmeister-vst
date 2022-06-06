@@ -289,7 +289,17 @@ void PluginProcessor::updateFileWatcher(const CompiledSheet& compiledSheet)
 void PluginProcessor::initCompiler()
 {
 	Compiler compiler(*this);
+	compiler.resetExecutablePath();
 	auto version = compiler.getVersionStr();
+	if (version.empty()) 
+	{
+		error(LogLambda(log << "The werckmeister compiler could not be found."));
+		info(LogLambda(log << "Please install werckmeister on your system."));
+		info(LogLambda(log << "https://werckme.github.io"));
+		info(LogLambda(log << "If you installed werckmeister and still got this message, try to set the werckmeister installation path in the preferences."));
+		compilerIsReady = false;
+		return;
+	}
 	info(LogLambda(log << "Compiler: " << compiler.compilerExecutable() << " -- " << version));
 	compilerIsReady = true;
 }

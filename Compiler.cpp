@@ -1,4 +1,5 @@
 #include "Compiler.h"
+#include <juce_core/juce_core.h>
 #include <cstdio>
 #include <iostream>
 #include <memory>
@@ -7,8 +8,8 @@
 #include <array>
 #include <vector>
 #include <sstream>
+#include "PreferencesData.h"
 
-#include <juce_core/juce_core.h>
 
 #if WIN32
 #define Popen _popen
@@ -145,6 +146,12 @@ std::string Compiler::compilerExecutable() const
 {
     if (__compiler_executable.empty())
     {
+        auto preferencesData = readPreferencesData();
+        if (!preferencesData.binPath.empty())
+        {
+            __compiler_executable = (juce::File::addTrailingSeparator(preferencesData.binPath) + "sheetc").toStdString();
+            return __compiler_executable;
+        }
 #ifdef WIN32
         __compiler_executable = "sheetc";
 #else
@@ -156,4 +163,9 @@ std::string Compiler::compilerExecutable() const
 #endif
     }
     return __compiler_executable;
+}
+
+void Compiler::resetExecutablePath()
+{
+    __compiler_executable.clear();
 }

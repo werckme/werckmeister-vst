@@ -8,7 +8,6 @@ The official werckmeister VST Plugin
 
 
 ## TODO MVP
-* compiler not found handling
 * UI Polishing
     * track filter colors
     * Black pages track labels clipped
