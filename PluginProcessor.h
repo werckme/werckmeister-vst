@@ -9,6 +9,7 @@
 #include "ILogger.h"
 #include "FileWatcher.hpp"
 #include "Compiler.h"
+#include "UdpSender.hpp"
 
 class PluginProcessor : public juce::AudioProcessor, public ILogger
 {
@@ -67,6 +68,7 @@ private:
 	NoteOffStack noteOffStack;
 	Mutex processMutex;
 	FileWatcher fileWatcher;
+	funk::UdpSender udpSender;
 	void sendAllNoteOff(juce::MidiBuffer&);
 	void updateFileWatcher(const CompiledSheet&);
 	IteratorTrackMap _iteratorTrackMap;

@@ -5,17 +5,20 @@
 
 namespace ip = boost::asio::ip;
 
+namespace
+{
+	const int THREAD_IDLE_TIME = 50;
+}
+
 namespace funk
 {
-	UdpSender::UdpSender(const std::string &hostStr)
+	UdpSender::UdpSender() : juce::Thread("UDP sender") {}
+	void UdpSender::start(const std::string &hostStr)
 	{
 		ip::udp::resolver resolver(_service);
 		auto hostInfo = getHostInfo(hostStr);
 		ip::udp::resolver::query query(ip::udp::v4(), std::get<0>(hostInfo), std::get<1>(hostInfo));
 		_endpoint = *resolver.resolve(query);
-	}
-	void UdpSender::start()
-	{
 		_socket = std::move(SocketPtr(new Socket(_service)));
 		_socket->open(ip::udp::v4());
 	}
@@ -42,5 +45,15 @@ namespace funk
 			return std::make_tuple(str, "");
 		}
 		return std::make_tuple(strs[0], strs[1]);
+	}
+	void UdpSender::run() 
+	{
+		start("localhost:99192");
+		while (!threadShouldExit())
+		{
+			sleep(THREAD_IDLE_TIME);
+			send(messageToSend.c_str(), messageToSend.length());
+		}
+		stop();
 	}
 }

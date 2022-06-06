@@ -5,16 +5,17 @@
 #include <vector>
 #include <boost/asio.hpp>
 #include <boost/core/noncopyable.hpp>
+#include <juce_core/juce_core.h>
 
 namespace funk
 {
 	/**
 	 * test the connection using: socat UDP-RECV:$port STDOUT
 	 */
-	class UdpSender : boost::noncopyable
+	class UdpSender : boost::noncopyable, public juce::Thread
 	{
 	public:
-		void start();
+		void start(const std::string &host);
 		void stop();
 		void send(const char *bytes, size_t length);
 
@@ -31,10 +32,11 @@ namespace funk
 		Service _service;
 		SocketPtr _socket;
 		Endpoint _endpoint;
-
 	protected:
 	public:
-		UdpSender(const std::string &host);
+		std::string messageToSend;
+		UdpSender();
 		virtual ~UdpSender() = default;
+		virtual void run() override;
 	};
 }

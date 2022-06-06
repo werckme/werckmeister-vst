@@ -18,12 +18,14 @@ PluginProcessor::PluginProcessor()
 {
 	fileWatcher.startThread();
 	fileWatcher.onFileChanged = std::bind(&PluginProcessor::reCompile, this);
+	udpSender.startThread();
 	initCompiler();
 }
 
 PluginProcessor::~PluginProcessor()
 {
 	fileWatcher.stopThread(3000);
+	udpSender.stopThread(3000);
 }
 
 void PluginProcessor::releaseResources()
@@ -145,6 +147,7 @@ void PluginProcessor::processBlock(juce::AudioBuffer<float>& buffer,
 	}
 	juce::AudioPlayHead::CurrentPositionInfo posInfo = {0};
 	playHead_->getCurrentPosition(posInfo);
+	udpSender.messageToSend = std::to_string(posInfo.timeInSeconds);
 	if (!posInfo.isPlaying && _lastIsPlayingState) 
 	{
 		_lastIsPlayingState = false;
