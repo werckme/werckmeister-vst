@@ -2,17 +2,20 @@
 #include <vector>
 #include <boost/bind.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/interprocess/sync/scoped_lock.hpp>
+#include <boost/interprocess/sync/named_mutex.hpp> 
 
 namespace ip = boost::asio::ip;
 
 namespace
 {
 	const int THREAD_IDLE_TIME = 50;
+	const int THREAD_IDLE_TIME_WAITING = 500;
 }
 
 namespace funk
 {
-	UdpSender::UdpSender() : juce::Thread("UDP sender") {}
+	UdpSender::UdpSender(const std::string &sheetPath) : juce::Thread("UDP sender"), _sheetPath(sheetPath) {}
 	void UdpSender::start(const std::string &hostStr)
 	{
 		ip::udp::resolver resolver(_service);
@@ -25,6 +28,7 @@ namespace funk
 	void UdpSender::stop()
 	{
 		_socket->close();
+		_socket.reset();
 	}
 	void UdpSender::send(const char *bytes, size_t length)
 	{
@@ -48,12 +52,33 @@ namespace funk
 	}
 	void UdpSender::run() 
 	{
-		start("localhost:99192");
+		using namespace boost::interprocess;
+		auto sheetPath = juce::File::createLegalFileName(_sheetPath).toStdString(); // slashes in the mutex name seems to cause undefined behaviour
+		named_mutex mutex(open_or_create, sheetPath.c_str());
+		bool isFree = mutex.try_lock(); // only one instance should send per sheet file
 		while (!threadShouldExit())
 		{
+			if (!isFree)
+			{
+				isFree = mutex.try_lock();
+				if(!isFree) // maybe the former locking instance has been released
+				{
+					sleep(THREAD_IDLE_TIME_WAITING);
+					continue;
+				}
+			}
+			if (!_socket)
+			{
+				start("localhost:99192");
+			}
+			auto msg = "werckmeister-funk:" + messageToSend;
+			send(msg.c_str(), msg.length());
 			sleep(THREAD_IDLE_TIME);
-			send(messageToSend.c_str(), messageToSend.length());
 		}
-		stop();
+		if (isFree)
+		{
+			mutex.unlock();
+			stop();
+		}
 	}
 }

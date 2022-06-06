@@ -18,14 +18,17 @@ PluginProcessor::PluginProcessor()
 {
 	fileWatcher.startThread();
 	fileWatcher.onFileChanged = std::bind(&PluginProcessor::reCompile, this);
-	udpSender.startThread();
 	initCompiler();
 }
 
 PluginProcessor::~PluginProcessor()
 {
 	fileWatcher.stopThread(3000);
-	udpSender.stopThread(3000);
+	if (udpSender)
+	{
+		udpSender->stopThread(3000);
+		udpSender.reset();
+	}
 }
 
 void PluginProcessor::releaseResources()
@@ -147,7 +150,10 @@ void PluginProcessor::processBlock(juce::AudioBuffer<float>& buffer,
 	}
 	juce::AudioPlayHead::CurrentPositionInfo posInfo = {0};
 	playHead_->getCurrentPosition(posInfo);
-	udpSender.messageToSend = std::to_string(posInfo.timeInSeconds);
+	if (udpSender)
+	{
+		udpSender->messageToSend = std::to_string((long)this) + ":" + std::to_string(posInfo.timeInSeconds) + "\n";
+	}
 	if (!posInfo.isPlaying && _lastIsPlayingState) 
 	{
 		_lastIsPlayingState = false;
@@ -321,6 +327,11 @@ void PluginProcessor::compile(const juce::String& path)
 	{
 		return;
 	}
+	if (udpSender)
+	{
+		udpSender->stopThread(1000);
+		udpSender.reset();
+	}
 	Compiler compiler(*this);
 	auto compileResult = compiler.compile(path.toStdString());
 	pluginStateData.sheetPath = path.toStdString();
@@ -349,6 +360,8 @@ void PluginProcessor::compile(const juce::String& path)
 		editor->tracksChanged();
 	}
 	updateFileWatcher(compileResult);
+	udpSender = std::make_unique<funk::UdpSender>(path.toStdString());
+	udpSender->startThread();
 }
 
 void PluginProcessor::findTrackName(size_t trackIndex, std::unordered_map<std::string, int>& trackAppearances)

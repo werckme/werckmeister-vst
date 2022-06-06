@@ -32,10 +32,11 @@ namespace funk
 		Service _service;
 		SocketPtr _socket;
 		Endpoint _endpoint;
+		std::string _sheetPath;
 	protected:
 	public:
-		std::string messageToSend;
-		UdpSender();
+		std::string messageToSend = "0";
+		UdpSender(const std::string &sheetPathName);
 		virtual ~UdpSender() = default;
 		virtual void run() override;
 	};
