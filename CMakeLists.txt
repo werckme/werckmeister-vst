@@ -4,14 +4,40 @@ execute_process(COMMAND git branch --show-current OUTPUT_VARIABLE GIT_BRANCH_NAM
 
 # Project name.
 project(werckmeister-vst VERSION 1.0.0)
-
+set (CMAKE_CXX_STANDARD 17)
+set(BOOST_VERSION "1.78.0")
 SET(BOOST_PACKAGES system)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
+if(WIN32)
+    SET(Boost_USE_STATIC_LIBS ON)
+    set(Boost_USE_MULTITHREADED ON)
+    set(Boost_USE_STATIC_RUNTIME ON)
+    SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT")
+    SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd")
+    SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT")
+    SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4250")
+endif(WIN32)
+
+IF(APPLE)
+  SET(Boost_USE_STATIC_LIBS ON)
+ENDIF(APPLE)
+
+
+if ("$ENV{WM_DOWNLOAD_EXTERNALS}")
+  #Download Boost
+  include(DownloadBoost)
+  DownloadBoost("${BOOST_VERSION}" "${CMAKE_SOURCE_DIR}/third_party/boost" 0)
+endif ()
+
+
 find_package(Boost 1.70.0 COMPONENTS ${BOOST_PACKAGES} REQUIRED)
 
 add_subdirectory(ext/JUCE)  
+INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
 
 juce_set_vst2_sdk_path(ext/vstsdk2.4)
-
 juce_add_plugin(WerckmeisterVST
     # VERSION ...                               # Set this if the plugin version is different to the project version
     # ICON_BIG ...                              # ICON_* arguments specify a path to an image file to use as an icon for the Standalone
@@ -39,7 +65,8 @@ target_sources(WerckmeisterVST
         FilterComponent.cpp
         FileWatcher.cpp
         Preferences.cpp
-        PreferencesData.cpp)
+        PreferencesData.cpp
+        UdpSender.cpp)
 
 target_compile_definitions(WerckmeisterVST
     PUBLIC
@@ -63,6 +90,7 @@ target_link_libraries(WerckmeisterVST
     PRIVATE
         # AudioPluginData           # If we'd created a binary data target, we'd link to it here
         juce::juce_audio_utils
+        ${Boost_LIBRARIES}
     PUBLIC
         juce::juce_recommended_config_flags
         juce::juce_recommended_lto_flags
