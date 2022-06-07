@@ -109,7 +109,7 @@ void PluginEditor::writeLine(const juce::String& line)
 
 void PluginEditor::setFilterStates()
 {
-    for (int trackIndex = 0; trackIndex < trackFilter.getItems().size(); ++trackIndex)
+    for (size_t trackIndex = 0; trackIndex < trackFilter.getItems().size(); ++trackIndex)
     {
         auto state = !processorRef.isMuted(trackIndex);
         trackFilter.setItemState(trackIndex, state);

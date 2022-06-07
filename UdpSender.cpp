@@ -1,5 +1,6 @@
 #include "UdpSender.hpp"
 #include <vector>
+
 #include <boost/bind.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/interprocess/sync/scoped_lock.hpp>
@@ -50,6 +51,22 @@ namespace funk
 		}
 		return std::make_tuple(strs[0], strs[1]);
 	}
+	
+	juce::String UdpSender::createMessage() const
+	{
+		CompiledSheetPtr sheet = compiledSheet.lock();
+		if (!sheet) 
+		{
+			return "";
+		}
+		juce::MemoryOutputStream ostream;
+		auto jsonObj = new juce::DynamicObject();
+		jsonObj->setProperty("type", juce::var("werckmeister-vst-funk"));
+		jsonObj->setProperty("sheetTime", juce::var(currentTimeInQuarters));
+		juce::JSON::writeToStream(ostream, jsonObj, true);
+		return ostream.toString();
+	}  
+
 	void UdpSender::run() 
 	{
 		using namespace boost::interprocess;
@@ -71,8 +88,11 @@ namespace funk
 			{
 				start("localhost:99192");
 			}
-			auto msg = "werckmeister-funk:" + messageToSend;
-			send(msg.c_str(), msg.length());
+			auto msg = createMessage();
+			if (!msg.isEmpty())
+			{
+				send(msg.toRawUTF8(), msg.getNumBytesAsUTF8());
+			}
 			sleep(THREAD_IDLE_TIME);
 		}
 		if (isFree)

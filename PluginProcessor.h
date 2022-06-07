@@ -53,6 +53,7 @@ public:
 	const MutedTracks& getMutedTracks() const { return mutedTracks; }
 	void initCompiler();
 private:
+	double currentSheetTempoInSecondsPerQuarterNote = 0;
 	bool compilerIsReady = false;
 	MutedTracks mutedTracks;
 	struct NoteOffStackItem
@@ -78,5 +79,7 @@ private:
 	void processNoteOffStack(juce::MidiBuffer& midiMessages);
 	void applyMutedTrackState(int trackIndex);
 	LogCache logCache;
+	CompiledSheetPtr compiledSheet;
+	double getTempoInSecondsPerQuarterNote(const juce::MidiFile &midiFile);
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PluginProcessor)
 };

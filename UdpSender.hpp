@@ -6,6 +6,7 @@
 #include <boost/asio.hpp>
 #include <boost/core/noncopyable.hpp>
 #include <juce_core/juce_core.h>
+#include "CompiledSheet.h"
 
 namespace funk
 {
@@ -33,9 +34,11 @@ namespace funk
 		SocketPtr _socket;
 		Endpoint _endpoint;
 		std::string _sheetPath;
+		juce::String createMessage() const;
 	protected:
 	public:
-		std::string messageToSend = "0";
+		std::weak_ptr<CompiledSheet> compiledSheet;
+		double currentTimeInQuarters = 0;
 		UdpSender(const std::string &sheetPathName);
 		virtual ~UdpSender() = default;
 		virtual void run() override;

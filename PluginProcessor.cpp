@@ -152,7 +152,7 @@ void PluginProcessor::processBlock(juce::AudioBuffer<float>& buffer,
 	playHead_->getCurrentPosition(posInfo);
 	if (udpSender)
 	{
-		udpSender->messageToSend = std::to_string((long)this) + ":" + std::to_string(posInfo.timeInSeconds) + "\n";
+		udpSender->currentTimeInQuarters = posInfo.timeInSeconds / currentSheetTempoInSecondsPerQuarterNote;
 	}
 	if (!posInfo.isPlaying && _lastIsPlayingState) 
 	{
@@ -282,15 +282,15 @@ void PluginProcessor::reCompile()
 	compile(pluginStateData.sheetPath);
 }
 
-void PluginProcessor::updateFileWatcher(const CompiledSheet& compiledSheet)
+void PluginProcessor::updateFileWatcher(const CompiledSheet& sheet)
 {
-	if (compiledSheet.sources.empty()) 
+	if (sheet.sources.empty()) 
 	{
 		return;
 	}
-	const auto& sources = compiledSheet.sources;
+	const auto& sources = sheet.sources;
 	FileWatcher::FileList filesToWatch;
-	filesToWatch.resize(compiledSheet.sources.size());
+	filesToWatch.resize(sheet.sources.size());
 	std::transform(sources.begin(), sources.end(), filesToWatch.begin(), [](const Source& source) { return source.path; });
 	fileWatcher.setFileList(filesToWatch);
 }
@@ -333,20 +333,20 @@ void PluginProcessor::compile(const juce::String& path)
 		udpSender.reset();
 	}
 	Compiler compiler(*this);
-	auto compileResult = compiler.compile(path.toStdString());
+	compiledSheet = compiler.compile(path.toStdString());
 	pluginStateData.sheetPath = path.toStdString();
 	LOCK(processMutex);
 	_midiFile.clear();
 	_iteratorTrackMap.clear();
 	mutedTracks.clear();
-	juce::MemoryInputStream fs(compileResult.midiData.data(), compileResult.midiData.size(), false);
+	juce::MemoryInputStream fs(compiledSheet->midiData.data(), compiledSheet->midiData.size(), false);
 	_midiFile.readFrom(fs);
 	_midiFile.convertTimestampTicksToSeconds();
 	auto numTracks = (size_t)_midiFile.getNumTracks();
 	_iteratorTrackMap.resize(numTracks);
 	trackNames.resize(numTracks);
 	std::unordered_map<std::string, int> trackAppearances;
-	trackAppearances.reserve(_midiFile.getNumTracks());
+	trackAppearances.reserve((size_t)_midiFile.getNumTracks());
 	for (size_t trackIdx = 0; trackIdx < numTracks; ++trackIdx)
 	{
 		auto track = _midiFile.getTrack((int)trackIdx);
@@ -354,14 +354,28 @@ void PluginProcessor::compile(const juce::String& path)
 		findTrackName(trackIdx, trackAppearances);
 		applyMutedTrackState(trackIdx);
 	}
+	currentSheetTempoInSecondsPerQuarterNote = getTempoInSecondsPerQuarterNote(_midiFile);
 	auto editor = dynamic_cast<PluginEditor*>(getActiveEditor());
 	if (editor != nullptr)
 	{
 		editor->tracksChanged();
 	}
-	updateFileWatcher(compileResult);
+	updateFileWatcher(*compiledSheet);
 	udpSender = std::make_unique<funk::UdpSender>(path.toStdString());
+	udpSender->compiledSheet = compiledSheet;
 	udpSender->startThread();
+}
+
+double PluginProcessor::getTempoInSecondsPerQuarterNote(const juce::MidiFile &midiFile)
+{
+	juce::MidiMessageSequence events;
+	midiFile.findAllTempoEvents(events);
+	if (events.getNumEvents() == 0)
+	{
+		return 120.0; // default is 120
+	}
+	// in werckmeister a piece has just one tempo event
+	return (*events.begin())->message.getTempoSecondsPerQuarterNote();
 }
 
 void PluginProcessor::findTrackName(size_t trackIndex, std::unordered_map<std::string, int>& trackAppearances)
@@ -399,7 +413,7 @@ void PluginProcessor::findTrackName(size_t trackIndex, std::unordered_map<std::s
 void PluginProcessor::log(ILogger::LogFunction fLog)
 {
 	std::stringstream logStream;
-	std::time_t t = std::time(0);   // get time now
+	std::time_t t = std::time(nullptr);   // get time now
 	std::tm* now = std::localtime(&t);
 	logStream.fill('0');
 	logStream << "[" 
@@ -428,11 +442,11 @@ void PluginProcessor::onTrackFilterChanged(int trackIndex, bool filterValue)
 	if (!filterValue)
 	{
 		mutedTracks.insert(trackIndex);
-		pluginStateData.mutedTracks.insert(trackNames.at(trackIndex));
+		pluginStateData.mutedTracks.insert(trackNames.at((size_t)trackIndex));
 		return;
 	}
 	mutedTracks.erase(trackIndex);
-	pluginStateData.mutedTracks.erase(trackNames.at(trackIndex));
+	pluginStateData.mutedTracks.erase(trackNames.at((size_t)trackIndex));
 }
 
 bool PluginProcessor::isMuted(int trackIndex) const
@@ -442,7 +456,7 @@ bool PluginProcessor::isMuted(int trackIndex) const
 
 void PluginProcessor::applyMutedTrackState(int trackIndex)
 {
-	auto trackName = trackNames.at(trackIndex);
+	auto trackName = trackNames.at((size_t)trackIndex);
 	bool isMuted = pluginStateData.mutedTracks.find(trackName) != pluginStateData.mutedTracks.end();
 	if (isMuted)
 	{

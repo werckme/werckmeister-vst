@@ -92,13 +92,13 @@ namespace
 }
 
 
-CompiledSheet Compiler::compile(const std::string& sheetPath)
+CompiledSheetPtr Compiler::compile(const std::string& sheetPath)
 {
     auto compilerExe = compilerExecutable();
     logger.log(LogLambda(log << "sheetc" << " \"" << sheetPath << "\""));
     try 
     {
-        CompiledSheet result;
+        CompiledSheetPtr result = std::make_shared<CompiledSheet>();
         auto stringResult = exec(compilerExe, { sheetPath, "--mode=json" });
         auto jsonResult = juce::JSON::parse(stringResult);
         checkForErrors(jsonResult, compilerExe, sheetPath);
@@ -108,16 +108,34 @@ CompiledSheet Compiler::compile(const std::string& sheetPath)
         double estimatedByteSize = (base64MidiData.length() * (3.0 / 4.0) + 10);
         juce::MemoryOutputStream midiByteStream((size_t)estimatedByteSize);
         juce::Base64::convertFromBase64(midiByteStream, base64MidiData);
-        result.midiData.resize(midiByteStream.getDataSize());
-        ::memcpy(result.midiData.data(), midiByteStream.getData(), result.midiData.size());
-        logger.log(LogLambda(log << "MIDI data created: " << result.midiData.size() << " Bytes"));
+        result->midiData.resize(midiByteStream.getDataSize());
+        ::memcpy(result->midiData.data(), midiByteStream.getData(), result->midiData.size());
+        logger.log(LogLambda(log << "MIDI data created: " << result->midiData.size() << " Bytes"));
         // sources
         const auto& sources = get(midiInfo, "sources");
         for (int i = 0; i < sources.size(); ++i)
         {
             const auto& sourceId = get(sources[i], "sourceId");
             const auto& path = get(sources[i], "path");
-            result.sources.push_back({ sourceId.toString().toStdString(), path.toString().toStdString() });
+            result->sources.push_back({ sourceId.toString().toStdString(), path.toString().toStdString() });
+        }
+        // document event infos
+        const auto& eventInfos = get(jsonResult, "eventInfos");
+        for (int i = 0; i < eventInfos.size(); ++i)
+        {
+            const auto& sheetEventInfos = get(eventInfos[i], "sheetEventInfos");
+            for(int j = 0; j < sheetEventInfos.size(); ++j)
+            {
+                DocumentEventInfo docEventInfo;
+                const auto &sheetEventInfo = sheetEventInfos[j];
+                docEventInfo.sourceId = (int)get(sheetEventInfo, "sourceId");
+                docEventInfo.beginPosition = (int)get(sheetEventInfo, "beginPosition");
+                docEventInfo.endPosition = (int)get(sheetEventInfo, "endPosition");
+                docEventInfo.beginTime = (double)get(sheetEventInfo, "beginTime");
+                docEventInfo.endTime = (double)get(sheetEventInfo, "endTime");
+                EventPositionSet value = {docEventInfo};
+                result->eventInfos += std::make_pair(TimelineIntervalType::right_open(docEventInfo.beginTime, docEventInfo.endTime), value);
+            }
         }
         return result;
     }
@@ -133,7 +151,7 @@ CompiledSheet Compiler::compile(const std::string& sheetPath)
     {
         logger.error(LogLambda(log << "FAILED: unkown error"));
     }
-    return CompiledSheet();
+    return nullptr;
 
 }
 

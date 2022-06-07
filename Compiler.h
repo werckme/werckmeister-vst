@@ -3,24 +3,13 @@
 #include <string>
 #include <vector>
 #include "ILogger.h"
-
-struct Source
-{
-    std::string sourceId;
-    std::string path;
-};
-
-struct CompiledSheet 
-{
-    std::vector<Source> sources;
-    std::vector<unsigned char> midiData;
-};
+#include "CompiledSheet.h"
 
 class Compiler 
 {
 public:
     Compiler(ILogger &logger_) : logger(logger_) {}
-    CompiledSheet compile(const std::string &sheetPath);
+    CompiledSheetPtr compile(const std::string &sheetPath);
     std::string getVersionStr();
     std::string compilerExecutable() const;
     void resetExecutablePath();
