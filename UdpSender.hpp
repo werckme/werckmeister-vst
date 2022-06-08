@@ -34,7 +34,8 @@ namespace funk
 		SocketPtr _socket;
 		Endpoint _endpoint;
 		std::string _sheetPath;
-		juce::String createMessage() const;
+		juce::String createMessage();
+		EventTimeline::const_iterator lastSentEvent;
 	protected:
 	public:
 		std::weak_ptr<CompiledSheet> compiledSheet;

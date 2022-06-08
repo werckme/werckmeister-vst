@@ -52,7 +52,7 @@ namespace funk
 		return std::make_tuple(strs[0], strs[1]);
 	}
 	
-	juce::String UdpSender::createMessage() const
+	juce::String UdpSender::createMessage()
 	{
 		CompiledSheetPtr sheet = compiledSheet.lock();
 		if (!sheet) 
@@ -63,7 +63,27 @@ namespace funk
 		auto jsonObj = new juce::DynamicObject();
 		jsonObj->setProperty("type", juce::var("werckmeister-vst-funk"));
 		jsonObj->setProperty("sheetTime", juce::var(currentTimeInQuarters));
+		const auto &timeline = sheet->eventInfos;
+		auto it = timeline.find(currentTimeInQuarters);
+		if (it == timeline.end() || it == lastSentEvent)
+		{
+			juce::JSON::writeToStream(ostream, jsonObj, true);
+			return ostream.toString();
+		}
+		juce::Array<juce::var> eventInfos;
+		for (const auto &ev : it->second)
+		{
+			auto eventInfo = new juce::DynamicObject();
+			eventInfo->setProperty("sourceId", juce::var(ev.sourceId));
+			eventInfo->setProperty("beginPosition", juce::var(ev.beginPosition));
+			eventInfo->setProperty("endPosition", juce::var(ev.endPosition));
+			eventInfo->setProperty("beginTime", juce::var(ev.beginTime));
+			eventInfo->setProperty("endTime", juce::var(ev.endTime));
+			eventInfos.add(eventInfo);
+		}
+		jsonObj->setProperty("eventInfos", juce::var(eventInfos));
 		juce::JSON::writeToStream(ostream, jsonObj, true);
+		lastSentEvent = it;
 		return ostream.toString();
 	}  
 
