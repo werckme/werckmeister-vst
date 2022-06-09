@@ -61,11 +61,14 @@ namespace funk
 		}
 		juce::MemoryOutputStream ostream;
 		auto jsonObj = new juce::DynamicObject();
+		lastUpdateTimestamp = (unsigned long)time(NULL);
 		jsonObj->setProperty("type", juce::var("werckmeister-vst-funk"));
+		jsonObj->setProperty("sheetPath", juce::var(_sheetPath));
 		jsonObj->setProperty("sheetTime", juce::var(currentTimeInQuarters));
+		jsonObj->setProperty("lastUpdateTimestamp", juce::var((double)lastUpdateTimestamp));
 		const auto &timeline = sheet->eventInfos;
 		auto it = timeline.find(currentTimeInQuarters);
-		if (it == timeline.end() || it == lastSentEvent)
+		if (it == timeline.end())
 		{
 			juce::JSON::writeToStream(ostream, jsonObj, true);
 			return ostream.toString();
@@ -74,14 +77,14 @@ namespace funk
 		for (const auto &ev : it->second)
 		{
 			auto eventInfo = new juce::DynamicObject();
-			eventInfo->setProperty("sourceId", juce::var(ev.sourceId));
+			eventInfo->setProperty("sourceId", juce::var((juce::int64)ev.sourceId));
 			eventInfo->setProperty("beginPosition", juce::var(ev.beginPosition));
 			eventInfo->setProperty("endPosition", juce::var(ev.endPosition));
 			eventInfo->setProperty("beginTime", juce::var(ev.beginTime));
 			eventInfo->setProperty("endTime", juce::var(ev.endTime));
 			eventInfos.add(eventInfo);
 		}
-		jsonObj->setProperty("eventInfos", juce::var(eventInfos));
+		jsonObj->setProperty("sheetEventInfos", juce::var(eventInfos));
 		juce::JSON::writeToStream(ostream, jsonObj, true);
 		lastSentEvent = it;
 		return ostream.toString();

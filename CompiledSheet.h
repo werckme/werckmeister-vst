@@ -19,7 +19,7 @@ struct DocumentEventInfo
     Ticks endTime = -1;
     int beginPosition = -1;
     int endPosition = -1;
-    int sourceId = -1;
+    unsigned sourceId = 0;
     bool operator<(const DocumentEventInfo &b) const { return this->sourceId == b.sourceId ? (this->beginPosition < b.beginPosition) : (this->sourceId < b.sourceId); }
     bool operator==(const DocumentEventInfo &b) const { return this->sourceId == b.sourceId && this->beginPosition == b.beginPosition; }
 };

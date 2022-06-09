@@ -128,9 +128,9 @@ CompiledSheetPtr Compiler::compile(const std::string& sheetPath)
             {
                 DocumentEventInfo docEventInfo;
                 const auto &sheetEventInfo = sheetEventInfos[j];
-                docEventInfo.sourceId = (int)get(sheetEventInfo, "sourceId");
-                docEventInfo.beginPosition = (int)get(sheetEventInfo, "beginPosition");
-                docEventInfo.endPosition = (int)get(sheetEventInfo, "endPosition");
+                docEventInfo.sourceId = (juce::int64)get(sheetEventInfo, "sourceId");
+                docEventInfo.beginPosition = (juce::int64)get(sheetEventInfo, "beginPosition");
+                docEventInfo.endPosition = (juce::int64)get(sheetEventInfo, "endPosition");
                 docEventInfo.beginTime = (double)get(sheetEventInfo, "beginTime");
                 docEventInfo.endTime = (double)get(sheetEventInfo, "endTime");
                 EventPositionSet value = {docEventInfo};
