@@ -5,6 +5,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/interprocess/sync/scoped_lock.hpp>
 #include <boost/interprocess/sync/named_mutex.hpp> 
+#include <boost/interprocess/shared_memory_object.hpp>
 
 namespace ip = boost::asio::ip;
 
@@ -16,7 +17,11 @@ namespace
 
 namespace funk
 {
-	UdpSender::UdpSender(const std::string &sheetPath) : juce::Thread("UDP sender"), _sheetPath(sheetPath) {}
+	UdpSender::UdpSender(ILogger *logger, const std::string &sheetPath, int port) : 
+		juce::Thread("UDP sender"), 
+		_sheetPath(sheetPath), 
+		_logger(logger), 
+		_port(port) {}
 	void UdpSender::start(const std::string &hostStr)
 	{
 		ip::udp::resolver resolver(_service);
@@ -109,12 +114,21 @@ namespace funk
 			}
 			if (!_socket)
 			{
-				start("localhost:99192");
+				auto url = std::string("localhost:") + std::to_string(_port);
+				start(url);
+				_logger->info(LogLambda(log << "funkfeuer on " << url));
 			}
 			auto msg = createMessage();
 			if (!msg.isEmpty())
 			{
-				send(msg.toRawUTF8(), msg.getNumBytesAsUTF8());
+				try 
+				{
+					send(msg.toRawUTF8(), msg.getNumBytesAsUTF8());
+				} 
+				catch(const std::exception &ex) 
+				{
+					_logger->error(LogLambda(log << "funkfeuer failed:" << ex.what()));
+				}
 			}
 			sleep(THREAD_IDLE_TIME);
 		}

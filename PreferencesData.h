@@ -6,6 +6,7 @@
 struct PreferencesData 
 {
     std::string binPath;
+    int funkfeuerPort = 99192;
 };
 
 void writePreferencesData(const PreferencesData&);

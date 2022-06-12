@@ -3,6 +3,7 @@
 #include "PluginEditor.h"
 #include "PluginProcessor.h"
 #include <algorithm>
+#include "Preferences.h"
 
 #define LOCK(mutex) std::lock_guard<Mutex> guard(mutex)
 
@@ -361,7 +362,8 @@ void PluginProcessor::compile(const juce::String& path)
 		editor->tracksChanged();
 	}
 	updateFileWatcher(*compiledSheet);
-	udpSender = std::make_unique<funk::UdpSender>(path.toStdString());
+	int port = readPreferencesData().funkfeuerPort;
+	udpSender = std::make_unique<funk::UdpSender>(this, path.toStdString(), port);
 	udpSender->compiledSheet = compiledSheet;
 	udpSender->startThread();
 }

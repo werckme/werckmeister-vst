@@ -7,6 +7,7 @@
 #include <boost/core/noncopyable.hpp>
 #include <juce_core/juce_core.h>
 #include "CompiledSheet.h"
+#include "ILogger.h"
 
 namespace funk
 {
@@ -37,11 +38,13 @@ namespace funk
 		std::string _sheetPath;
 		juce::String createMessage();
 		EventTimeline::const_iterator lastSentEvent;
+		ILogger* _logger;
+		int _port;
 	protected:
 	public:
 		std::weak_ptr<CompiledSheet> compiledSheet;
 		double currentTimeInQuarters = 0;
-		UdpSender(const std::string &sheetPathName);
+		UdpSender(ILogger *logger, const std::string &sheetPathName, int port);
 		virtual ~UdpSender() = default;
 		virtual void run() override;
 	};

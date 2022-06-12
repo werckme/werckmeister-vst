@@ -25,6 +25,7 @@ void writePreferencesData(const PreferencesData& data)
     }
     juce::ValueTree valueTree("WerckmeisterVSTPreferencesData");
     valueTree.setProperty("binPath", juce::var(data.binPath), nullptr);
+    valueTree.setProperty("funkfeuerPort", juce::var(data.funkfeuerPort), nullptr);
     configFile.replaceWithText(valueTree.toXmlString());
 }
 
@@ -38,5 +39,9 @@ PreferencesData readPreferencesData()
     }
     auto valueTree = juce::ValueTree::fromXml(configFile.loadFileAsString());
     result.binPath = valueTree.getProperty("binPath").toString().toStdString();
+    auto portProperty = valueTree.getProperty("funkfeuerPort");
+    if (!portProperty.isVoid()) {
+         result.funkfeuerPort = (int)valueTree.getProperty("funkfeuerPort");
+    }
     return result;
 }
