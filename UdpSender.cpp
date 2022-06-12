@@ -99,15 +99,13 @@ namespace funk
 	{
 		using namespace boost::interprocess;
 		auto sheetPath = juce::File::createLegalFileName(_sheetPath).toStdString(); // slashes in the mutex name seems to cause undefined behaviour
-		//named_mutex mutex(open_or_create, sheetPath.c_str());
-		bool isFree = true; //mutex.try_lock(); // only one instance should send per sheet file
-		auto url = std::string("localhost:") + std::to_string(_port);
-		_logger->info(LogLambda(log << "starting funkfeuer on " << url));
+		named_mutex mutex(open_or_create, sheetPath.c_str());
+		bool isFree = mutex.try_lock(); // only one instance should send per sheet file
 		while (!threadShouldExit())
 		{
 			if (!isFree)
 			{
-				// isFree = mutex.try_lock();
+				isFree = mutex.try_lock();
 				if(!isFree) // maybe the former locking instance has been released
 				{
 					sleep(THREAD_IDLE_TIME_WAITING);
@@ -116,7 +114,16 @@ namespace funk
 			}
 			if (!_socket)
 			{
-				start(url);
+				auto url = std::string("localhost:") + std::to_string(_port);
+				_logger->info(LogLambda(log << "starting funkfeuer on " << url));
+				try 
+				{
+					start(url);
+				}
+				catch(const std::exception &ex)
+				{
+					_logger->error(LogLambda(log << "starting funkfeuer failed: " << ex.what()));
+				}
 				_logger->info(LogLambda(log << "funkfeuer on " << url));
 			}
 			auto msg = createMessage();
@@ -135,7 +142,7 @@ namespace funk
 		}
 		if (isFree)
 		{
-			//mutex.unlock();
+			mutex.unlock();
 			stop();
 		}
 	}
