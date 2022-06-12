@@ -98,7 +98,7 @@ namespace funk
 	void UdpSender::run() 
 	{
 		using namespace boost::interprocess;
-		auto sheetPath = juce::File::createLegalFileName(_sheetPath).toStdString(); // slashes in the mutex name seems to cause undefined behaviour
+		auto sheetPath = std::string("TESTMUTEX");//juce::File::createLegalFileName(_sheetPath).toStdString(); // slashes in the mutex name seems to cause undefined behaviour
 		named_mutex mutex(open_or_create, sheetPath.c_str());
 		bool isFree = mutex.try_lock(); // only one instance should send per sheet file
 		while (!threadShouldExit())
@@ -108,7 +108,8 @@ namespace funk
 				isFree = mutex.try_lock();
 				if(!isFree) // maybe the former locking instance has been released
 				{
-					sleep(THREAD_IDLE_TIME_WAITING);
+					_logger->info(LogLambda(log << "MUTEX IS NOT FREE: " << sheetPath));
+					sleep(5000);
 					continue;
 				}
 			}
