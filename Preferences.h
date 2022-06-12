@@ -25,6 +25,9 @@ private:
     juce::TextEditor sheetPath;
     juce::TextButton findPathBtn;
     juce::TextButton okBtn;
+    juce::Label portLabel;
+    juce::Label portLabel_2;
+    juce::TextEditor portNumber;
     std::unique_ptr<juce::FileChooser> myChooser;
     void select();
     void close();

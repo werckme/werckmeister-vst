@@ -23,9 +23,14 @@ void writePreferencesData(const PreferencesData& data)
     {
         configFile.create();
     }
+    int port = data.funkfeuerPort;
+    if(port == 0) 
+    {
+        port = DefaultPort;
+    }
     juce::ValueTree valueTree("WerckmeisterVSTPreferencesData");
     valueTree.setProperty("binPath", juce::var(data.binPath), nullptr);
-    valueTree.setProperty("funkfeuerPort", juce::var(data.funkfeuerPort), nullptr);
+    valueTree.setProperty("funkfeuerPort", juce::var(port), nullptr);
     configFile.replaceWithText(valueTree.toXmlString());
 }
 
