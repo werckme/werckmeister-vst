@@ -5,9 +5,11 @@
 #include "FilterComponent.h"
 #include <mutex>
 #include "Preferences.h"
+#include <list>
+#include <string>
 
 //==============================================================================
-class PluginEditor  : public juce::AudioProcessorEditor
+class PluginEditor  : public juce::AudioProcessorEditor, public juce::AsyncUpdater
 {
 public:
     explicit PluginEditor (PluginProcessor&);
@@ -18,11 +20,12 @@ public:
     void resized() override;
     virtual void writeLine(const juce::String&);
     void tracksChanged();
+    void handleAsyncUpdate() override;
 private:
+    std::list<std::string> logCache;
     bool tracksAreDirty = false;
     typedef std::recursive_mutex Mutex;
-    Mutex mutex;
-    std::list<juce::String> lineCache;
+    Mutex logMutex;
     std::unique_ptr<juce::FileChooser> myChooser;
     juce::TextEditor console;
     juce::TextButton findSheetFileBtn;

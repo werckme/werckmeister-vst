@@ -6,6 +6,7 @@
 #include <boost/interprocess/sync/scoped_lock.hpp>
 #include <boost/interprocess/sync/named_mutex.hpp> 
 #include <boost/interprocess/shared_memory_object.hpp>
+#include <boost/functional/hash.hpp>
 
 namespace ip = boost::asio::ip;
 
@@ -70,7 +71,8 @@ namespace funk
 		jsonObj->setProperty("type", juce::var("werckmeister-vst-funk"));
 		jsonObj->setProperty("sheetPath", juce::var(_sheetPath));
 		jsonObj->setProperty("sheetTime", juce::var(currentTimeInQuarters));
-		jsonObj->setProperty("lastUpdateTimestamp", juce::var((double)lastUpdateTimestamp));
+		jsonObj->setProperty("lastUpdateTimestamp", juce::var((juce::int64)lastUpdateTimestamp));
+
 		const auto &timeline = sheet->eventInfos;
 		auto it = timeline.find(currentTimeInQuarters);
 		if (it == timeline.end())
@@ -97,10 +99,28 @@ namespace funk
 
 	void UdpSender::run() 
 	{
+		try 
+		{
+			runImpl();	
+		}
+		catch (const std::exception &ex)
+		{
+			_logger->error(LogLambda(log << "starting funkfeuer failed: " << ex.what()));
+		}
+		catch (...)
+		{
+			_logger->error(LogLambda(log << "starting funkfeuer failed: unkown error"));
+		}
+	}
+
+	void UdpSender::runImpl() 
+	{
 		using namespace boost::interprocess;
-		auto sheetPath = juce::File::createLegalFileName(_sheetPath).toStdString(); // slashes in the mutex name seems to cause undefined behaviour
-		sheetPath += std::to_string(_port);
-		named_mutex mutex(open_or_create, sheetPath.c_str());
+		std::size_t mutexId = 0;
+		boost::hash_combine(mutexId, _sheetPath);
+		boost::hash_combine(mutexId, _port);
+		auto mutexIdString = std::to_string(mutexId) + "wmvst";
+		named_mutex mutex(open_or_create, mutexIdString.c_str());
 		bool isFree = mutex.try_lock(); // only one instance should send per sheet file
 		while (!threadShouldExit())
 		{
@@ -116,7 +136,6 @@ namespace funk
 			if (!_socket)
 			{
 				auto url = std::string("localhost:") + std::to_string(_port);
-				_logger->info(LogLambda(log << "starting funkfeuer on " << url));
 				try 
 				{
 					start(url);
@@ -124,6 +143,8 @@ namespace funk
 				catch(const std::exception &ex)
 				{
 					_logger->error(LogLambda(log << "starting funkfeuer failed: " << ex.what()));
+					sleep(THREAD_IDLE_TIME_WAITING);
+					continue;
 				}
 				catch(...)
 				{
@@ -131,7 +152,6 @@ namespace funk
 					sleep(THREAD_IDLE_TIME_WAITING);
 					continue;
 				}
-				_logger->info(LogLambda(log << "funkfeuer on " << url));
 			}
 			auto msg = createMessage();
 			if (!msg.isEmpty())

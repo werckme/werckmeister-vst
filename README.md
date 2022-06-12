@@ -13,6 +13,5 @@ The official werckmeister VST Plugin
     * Black pages track labels clipped
     * console font
     * logo bg
-
-## Future
-* VSCode integration
+* log shows old messages
+* log behaviour after preferences->ok

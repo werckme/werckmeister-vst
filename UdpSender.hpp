@@ -40,6 +40,7 @@ namespace funk
 		EventTimeline::const_iterator lastSentEvent;
 		ILogger* _logger;
 		int _port;
+		void runImpl();
 	protected:
 	public:
 		std::weak_ptr<CompiledSheet> compiledSheet;

@@ -4,8 +4,8 @@
 #include <iostream>
 #include "Compiler.h"
 
+#define LOCK(mutex) std::lock_guard<Mutex> guard(mutex)
 
-//==============================================================================
 PluginEditor::PluginEditor (PluginProcessor& p)
     : AudioProcessorEditor (&p), processorRef (p)
 {
@@ -44,13 +44,10 @@ PluginEditor::PluginEditor (PluginProcessor& p)
 
     //
     writeLine(juce::String("Werckmeister VST ") + JucePlugin_VersionString);
-    const auto &logCache = processorRef.getLogCache();
-    for (const auto& str : logCache)
-    {
-        writeLine(str);
-    }
-
+    const auto &processorlogCache = processorRef.getLogCache();
+    logCache.insert(logCache.end(), processorlogCache.begin(), processorlogCache.end());
     tracksChanged();
+    triggerAsyncUpdate();
 }
 
 void PluginEditor::onTrackFilterChanged(int trackIndex, bool filterValue)
@@ -100,11 +97,25 @@ void PluginEditor::selectSheetFile()
     }); 
 }
 
+void PluginEditor::handleAsyncUpdate()
+{
+    LOCK(logMutex);
+    std::stringstream ss;
+    ss << console.getText().trim() << std::endl;
+    for(const auto& line : logCache)
+    {
+        ss << line << std::endl;
+    }
+    console.setText(ss.str());
+    logCache.clear();
+    console.scrollDown();
+}
+
 void PluginEditor::writeLine(const juce::String& line)
 {
-    auto newLine = (console.getText() + "\n" + line).trim();
-    console.setText(newLine);
-    console.scrollDown();
+    LOCK(logMutex);
+    logCache.push_back(line.toStdString());
+    triggerAsyncUpdate();
 }
 
 void PluginEditor::setFilterStates()
