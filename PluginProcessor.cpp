@@ -374,7 +374,7 @@ double PluginProcessor::getTempoInSecondsPerQuarterNote(const juce::MidiFile &mi
 	midiFile.findAllTempoEvents(events);
 	if (events.getNumEvents() == 0)
 	{
-		return 120.0; // default is 120
+		return 0.5; // default is 120
 	}
 	// in werckmeister a piece has just one tempo event
 	return (*events.begin())->message.getTempoSecondsPerQuarterNote();
