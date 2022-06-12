@@ -128,6 +128,8 @@ namespace funk
 				catch(...)
 				{
 					_logger->error(LogLambda(log << "starting funkfeuer failed."));
+					sleep(THREAD_IDLE_TIME_WAITING);
+					continue;
 				}
 				_logger->info(LogLambda(log << "funkfeuer on " << url));
 			}
@@ -141,6 +143,10 @@ namespace funk
 				catch(const std::exception &ex) 
 				{
 					_logger->error(LogLambda(log << "funkfeuer failed:" << ex.what()));
+				}
+				catch(...)
+				{
+					_logger->error(LogLambda(log << "funkfeuer failed."));
 				}
 			}
 			sleep(THREAD_IDLE_TIME);
