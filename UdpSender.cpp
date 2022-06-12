@@ -125,6 +125,10 @@ namespace funk
 				{
 					_logger->error(LogLambda(log << "starting funkfeuer failed: " << ex.what()));
 				}
+				catch(...)
+				{
+					_logger->error(LogLambda(log << "starting funkfeuer failed."));
+				}
 				_logger->info(LogLambda(log << "funkfeuer on " << url));
 			}
 			auto msg = createMessage();
