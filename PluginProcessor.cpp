@@ -133,13 +133,13 @@ void PluginProcessor::sendAllNoteOff(juce::MidiBuffer& midiMessages)
 void PluginProcessor::processBlock(juce::AudioBuffer<float>& buffer,
 	juce::MidiBuffer& midiMessages)
 {
+	LOCK(processMutex);
 	juce::ScopedNoDenormals noDenormals;
 	auto totalNumOutputChannels = getTotalNumOutputChannels();
 	for (auto i = 0; i < totalNumOutputChannels; ++i)
 	{
 		buffer.clear(i, 0, buffer.getNumSamples());
 	}
-	LOCK(processMutex);
 	processNoteOffStack(midiMessages);
 	if(_midiFile.getNumTracks() == 0)
 	{
@@ -316,6 +316,7 @@ void PluginProcessor::initCompiler()
 
 void PluginProcessor::compile(const juce::String& path)
 {
+	LOCK(processMutex);
 	if (!compilerIsReady)
 	{
 		return;
@@ -336,10 +337,13 @@ void PluginProcessor::compile(const juce::String& path)
 	Compiler compiler(*this);
 	compiledSheet = compiler.compile(path.toStdString());
 	pluginStateData.sheetPath = path.toStdString();
-	LOCK(processMutex);
 	_midiFile.clear();
 	_iteratorTrackMap.clear();
 	mutedTracks.clear();
+	if (!compiledSheet)
+	{
+		return;
+	}
 	juce::MemoryInputStream fs(compiledSheet->midiData.data(), compiledSheet->midiData.size(), false);
 	_midiFile.readFrom(fs);
 	_midiFile.convertTimestampTicksToSeconds();
