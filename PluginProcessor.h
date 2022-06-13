@@ -58,7 +58,7 @@ private:
 	MutedTracks mutedTracks;
 	struct NoteOffStackItem
 	{
-		const juce::MidiMessage* noteOff;
+		const juce::MidiMessage noteOff;
 		int offsetInSamples = 0;
 	};
 	void findTrackName(size_t trackIndex, std::unordered_map<std::string, int> &trackAppearancesMap);

@@ -125,7 +125,7 @@ void PluginProcessor::sendAllNoteOff(juce::MidiBuffer& midiMessages)
 {
 	for (NoteOffStack::iterator it = noteOffStack.begin(); it != noteOffStack.end(); ++it)
 	{
-		midiMessages.addEvent(*it->noteOff, 0);
+		midiMessages.addEvent(it->noteOff, 0);
 	}
 	noteOffStack.clear();
 }
@@ -133,7 +133,6 @@ void PluginProcessor::sendAllNoteOff(juce::MidiBuffer& midiMessages)
 void PluginProcessor::processBlock(juce::AudioBuffer<float>& buffer,
 	juce::MidiBuffer& midiMessages)
 {
-	LOCK(processMutex);
 	juce::ScopedNoDenormals noDenormals;
 	auto totalNumOutputChannels = getTotalNumOutputChannels();
 	for (auto i = 0; i < totalNumOutputChannels; ++i)
@@ -141,6 +140,7 @@ void PluginProcessor::processBlock(juce::AudioBuffer<float>& buffer,
 		buffer.clear(i, 0, buffer.getNumSamples());
 	}
 	processNoteOffStack(midiMessages);
+	LOCK(processMutex);
 	if(_midiFile.getNumTracks() == 0)
 	{
 		return;
@@ -216,7 +216,7 @@ void PluginProcessor::processBlock(juce::AudioBuffer<float>& buffer,
 					}
 					else
 					{
-						NoteOffStackItem noteOff = {&noteOffMidiMessage, (int)noteOffSampleOffset};
+						NoteOffStackItem noteOff = {noteOffMidiMessage, (int)noteOffSampleOffset};
 						noteOffStack.emplace_back(noteOff);
 					}
 				}
@@ -238,7 +238,7 @@ void PluginProcessor::processNoteOffStack(juce::MidiBuffer& midiMessages)
 		{
 			continue;
 		}
-		midiMessages.addEvent(*it->noteOff, it->offsetInSamples);
+		midiMessages.addEvent(it->noteOff, it->offsetInSamples);
 		toRemove.push_back(it);
 	}
 
@@ -316,7 +316,6 @@ void PluginProcessor::initCompiler()
 
 void PluginProcessor::compile(const juce::String& path)
 {
-	LOCK(processMutex);
 	if (!compilerIsReady)
 	{
 		return;
@@ -337,6 +336,7 @@ void PluginProcessor::compile(const juce::String& path)
 	Compiler compiler(*this);
 	compiledSheet = compiler.compile(path.toStdString());
 	pluginStateData.sheetPath = path.toStdString();
+	LOCK(processMutex);
 	_midiFile.clear();
 	_iteratorTrackMap.clear();
 	mutedTracks.clear();
