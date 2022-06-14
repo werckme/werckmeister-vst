@@ -113,20 +113,49 @@ namespace funk
 		}
 	}
 
+	namespace 
+	{
+		class Lock
+		{
+		private:
+			typedef boost::interprocess::named_mutex Mutex;
+			std::unique_ptr<Mutex> _mutex;
+			std::string _lockId;
+			bool _isFree = false;
+		public:
+			Lock(const std::string& lockId) : _lockId(lockId)
+			{
+				using namespace boost::interprocess;
+				_mutex = std::make_unique<Mutex>(open_or_create, _lockId.c_str());
+			}
+			~Lock()
+			{
+				_mutex->unlock();
+				boost::interprocess::named_mutex::remove(_lockId.c_str());
+			}
+			bool tryLock()
+			{
+				_isFree = _mutex->try_lock();
+				return _isFree;
+			}
+			inline bool isFree() const { return _isFree; }
+		};
+	}
+
 	void UdpSender::runImpl() 
 	{
-		using namespace boost::interprocess;
+		
 		std::size_t mutexId = 0;
 		boost::hash_combine(mutexId, _sheetPath);
 		boost::hash_combine(mutexId, _port);
 		auto mutexIdString = std::to_string(mutexId) + "wmvst";
-		named_mutex mutex(open_or_create, mutexIdString.c_str());
-		bool isFree = mutex.try_lock(); // only one instance should send per sheet file
+		Lock lock(mutexIdString);
+		bool isFree = lock.tryLock(); // only one instance should send per sheet file
 		while (!threadShouldExit())
 		{
 			if (!isFree)
 			{
-				isFree = mutex.try_lock();
+				isFree = lock.tryLock();
 				if(!isFree) // maybe the former locking instance has been released
 				{
 					sleep(THREAD_IDLE_TIME_WAITING);
@@ -173,7 +202,6 @@ namespace funk
 		}
 		if (isFree)
 		{
-			mutex.unlock();
 			stop();
 		}
 	}
