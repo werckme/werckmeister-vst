@@ -24,6 +24,9 @@ IF(APPLE)
   SET(Boost_USE_STATIC_LIBS ON)
 ENDIF(APPLE)
 
+include(FileEmbed)
+FileEmbedSetup()
+FileEmbedAdd(${CMAKE_SOURCE_DIR}/Resources/preferences_normal.png)
 
 if ("$ENV{WM_DOWNLOAD_EXTERNALS}")
   #Download Boost
@@ -91,6 +94,7 @@ target_link_libraries(WerckmeisterVST
         # AudioPluginData           # If we'd created a binary data target, we'd link to it here
         juce::juce_audio_utils
         ${Boost_LIBRARIES}
+        file_embed
     PUBLIC
         juce::juce_recommended_config_flags
         juce::juce_recommended_lto_flags
