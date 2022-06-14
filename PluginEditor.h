@@ -29,8 +29,8 @@ private:
     std::unique_ptr<juce::FileChooser> myChooser;
     juce::TextEditor console;
     juce::TextButton findSheetFileBtn;
-    juce::TextButton preferences;
     juce::TextButton recompileBtn;
+    juce::ImageButton preferences;
     juce::Viewport trackFilterView;
     std::unique_ptr<Preferences> preferencesComponent;
     FilterComponent trackFilter;

@@ -55,9 +55,9 @@ juce_add_plugin(WerckmeisterVST
     PLUGIN_MANUFACTURER_CODE wmvt               # A four-character manufacturer id with at least one upper-case character
     PLUGIN_CODE Wmvt                            # A unique four-character plugin id with exactly one upper-case character
                                                 # GarageBand 10.3 requires the first letter to be upper-case, and the remaining letters to be lower-case
-    FORMATS AUv3 VST VST3 Standalone                  # The formats to build. Other valid formats are: AAX Unity VST AU AUv3
+    FORMATS AUv3 VST VST3 Standalone            # The formats to build. Other valid formats are: AAX Unity VST AU AUv3
     PRODUCT_NAME "Werckmeister VST"
-    )        # The name of the final executable, which can differ from the target name
+)                                               # The name of the final executable, which can differ from the target name
 
 target_sources(WerckmeisterVST
     PRIVATE
@@ -92,9 +92,9 @@ target_compile_definitions(WerckmeisterVST
 target_link_libraries(WerckmeisterVST
     PRIVATE
         # AudioPluginData           # If we'd created a binary data target, we'd link to it here
+        file_embed
         juce::juce_audio_utils
         ${Boost_LIBRARIES}
-        file_embed
     PUBLIC
         juce::juce_recommended_config_flags
         juce::juce_recommended_lto_flags

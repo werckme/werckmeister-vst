@@ -3,13 +3,17 @@
 #include <functional>
 #include <iostream>
 #include "Compiler.h"
+extern "C" {
+    #include "preferences_normal_png.h"
+}
 
 #define LOCK(mutex) std::lock_guard<Mutex> guard(mutex)
 
 PluginEditor::PluginEditor (PluginProcessor& p)
     : AudioProcessorEditor (&p), processorRef (p)
 {
-    setSize(800, 600);
+    int w = 800, h = 600;
+    setSize(w, h);
 
     //
     findSheetFileBtn.setButtonText("Open Sheet File");
@@ -24,8 +28,13 @@ PluginEditor::PluginEditor (PluginProcessor& p)
     recompileBtn.onClick = std::bind(&PluginEditor::recompile, this);
 
     //
-    preferences.setButtonText("S");
-    preferences.setBounds(720, 5, 50, 50);
+    auto prefrencesImage = juce::ImageCache::getFromMemory(preferences_normal_png_data, preferences_normal_png_size);
+    
+    preferences.setImages(true, true, true,
+        prefrencesImage, 1.0f, juce::Colour(),
+        prefrencesImage, 1.0f, juce::Colour(),
+        prefrencesImage, 1.0f, juce::Colour());
+    preferences.setBounds(w-50-5, 5, 50, 50);
     preferences.onClick = std::bind(&PluginEditor::showPreferences, this);
     addAndMakeVisible(preferences);
 
@@ -122,8 +131,8 @@ void PluginEditor::setFilterStates()
 {
     for (size_t trackIndex = 0; trackIndex < trackFilter.getItems().size(); ++trackIndex)
     {
-        auto state = !processorRef.isMuted(trackIndex);
-        trackFilter.setItemState(trackIndex, state);
+        auto state = !processorRef.isMuted((int)trackIndex);
+        trackFilter.setItemState((int)trackIndex, state);
     }
 }
 
