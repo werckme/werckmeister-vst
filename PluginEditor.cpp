@@ -32,7 +32,7 @@ PluginEditor::PluginEditor (PluginProcessor& p)
     
     preferences.setImages(true, true, true,
         prefrencesImage, 1.0f, juce::Colour(),
-        prefrencesImage, 1.0f, juce::Colour(),
+        prefrencesImage, 0.7f, juce::Colour(),
         prefrencesImage, 1.0f, juce::Colour());
     preferences.setBounds(w-50-5, 5, 50, 50);
     preferences.onClick = std::bind(&PluginEditor::showPreferences, this);
