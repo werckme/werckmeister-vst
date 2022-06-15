@@ -54,6 +54,10 @@ PluginEditor::PluginEditor (PluginProcessor& p)
     //
     console.setBounds(5, 60 + 100 + 5, getWidth() - 5 - 5, getHeight() - 200);
     console.setMultiLine(true);
+    auto font = console.getFont();
+    font.setBold(false);
+    font.setHeight(15);
+    console.setFont(font);
     console.setEnabled(false);
     console.setColour(juce::TextEditor::ColourIds::backgroundColourId, juce::Colour((juce::uint8)0, (juce::uint8)0, (juce::uint8)0, (juce::uint8)150));
     addAndMakeVisible(console);
