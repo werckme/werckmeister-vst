@@ -27,6 +27,7 @@ ENDIF(APPLE)
 include(FileEmbed)
 FileEmbedSetup()
 FileEmbedAdd(${CMAKE_SOURCE_DIR}/Resources/preferences_normal.png)
+FileEmbedAdd(${CMAKE_SOURCE_DIR}/Resources/logo.png)
 
 if ("$ENV{WM_DOWNLOAD_EXTERNALS}")
   #Download Boost

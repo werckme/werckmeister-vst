@@ -5,6 +5,7 @@
 #include "Compiler.h"
 extern "C" {
     #include "preferences_normal_png.h"
+    #include "logo_png.h"
 }
 
 #define LOCK(mutex) std::lock_guard<Mutex> guard(mutex)
@@ -46,9 +47,15 @@ PluginEditor::PluginEditor (PluginProcessor& p)
     addAndMakeVisible(trackFilterView);
 
     //
+    auto backgroundImage = juce::ImageCache::getFromMemory(logo_png_data, logo_png_size);
+    background.setBounds(0, 65, 800, 600);
+    background.setImage(backgroundImage);
+    addAndMakeVisible(background);
+    //
     console.setBounds(5, 60 + 100 + 5, getWidth() - 5 - 5, getHeight() - 200);
     console.setMultiLine(true);
     console.setEnabled(false);
+    console.setColour(juce::TextEditor::ColourIds::backgroundColourId, juce::Colour((juce::uint8)0, (juce::uint8)0, (juce::uint8)0, (juce::uint8)150));
     addAndMakeVisible(console);
 
     //
