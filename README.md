@@ -8,10 +8,5 @@ The official werckmeister VST Plugin
 
 
 ## TODO MVP
-* UI Polishing
-    * track filter colors
-    * Black pages track labels clipped
-    * console font
-    * logo bg
 * log shows old messages
 * log behaviour after preferences->ok

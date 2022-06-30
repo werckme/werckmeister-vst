@@ -31,6 +31,7 @@ private:
     juce::TextButton findSheetFileBtn;
     juce::TextButton recompileBtn;
     juce::ImageButton preferences;
+    juce::ImageComponent background;
     juce::Viewport trackFilterView;
     std::unique_ptr<Preferences> preferencesComponent;
     FilterComponent trackFilter;

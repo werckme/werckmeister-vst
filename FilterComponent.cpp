@@ -1,8 +1,30 @@
 #include "FilterComponent.h"
 #include <algorithm>
+//#include "TrackColors.h"
 
 namespace 
 {
+	const std::array<juce::Colour, 17> TrackColors = {
+		juce::Colour((juce::uint8)255,(juce::uint8)255,(juce::uint8)255),
+		juce::Colour((juce::uint8)111,(juce::uint8)105,(juce::uint8)172),
+		juce::Colour((juce::uint8)149,(juce::uint8)218,(juce::uint8)193),
+		juce::Colour((juce::uint8)255,(juce::uint8)235,(juce::uint8)161),
+		juce::Colour((juce::uint8)253,(juce::uint8)111,(juce::uint8)150),
+		juce::Colour((juce::uint8)61,(juce::uint8)178,(juce::uint8)255),
+		juce::Colour((juce::uint8)255,(juce::uint8)184,(juce::uint8)48),
+		juce::Colour((juce::uint8)255,(juce::uint8)36,(juce::uint8)66),
+		juce::Colour((juce::uint8)255,(juce::uint8)72,(juce::uint8)72),
+		juce::Colour((juce::uint8)172,(juce::uint8)102,(juce::uint8)204),
+		juce::Colour((juce::uint8)243,(juce::uint8)113,(juce::uint8)33),
+		juce::Colour((juce::uint8)245,(juce::uint8)180,(juce::uint8)97),
+		juce::Colour((juce::uint8)217,(juce::uint8)32,(juce::uint8)39),
+		juce::Colour((juce::uint8)188,(juce::uint8)101,(juce::uint8)141),
+		juce::Colour((juce::uint8)141,(juce::uint8)68,(juce::uint8)139),
+		juce::Colour((juce::uint8)223,(juce::uint8)14,(juce::uint8)98),
+		juce::Colour((juce::uint8)255,(juce::uint8)46,(juce::uint8)76)
+	};
+
+
 	std::string toLower(const std::string& str)
 	{
 		auto copy = str;
@@ -40,10 +62,14 @@ void FilterComponent::setItems(const Items& newItems)
 {
 	clear();
 	this->items = newItems;
+	int colorCounter = 0;
 	for (int itemIndex = 0; itemIndex < items.size(); ++itemIndex)
 	{
 		const auto& item = items[itemIndex];
 		FilterControlPtr btn = std::make_shared<FilterControl>(item);
+		auto color = TrackColors.at(colorCounter++ % TrackColors.size());
+		btn->setColour(FilterControl::ColourIds::tickColourId, color);
+		btn->setColour(FilterControl::ColourIds::textColourId, color);
 		std::weak_ptr<FilterControl> wbtn = btn;
 		btn->onClick = [this, itemIndex, wbtn]()
 		{
