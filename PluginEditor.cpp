@@ -17,6 +17,12 @@ PluginEditor::PluginEditor (PluginProcessor& p)
     setSize(w, h);
 
     //
+    auto backgroundImage = juce::ImageCache::getFromMemory(logo_png_data, logo_png_size);
+    background.setBounds(0, 65, 800, 600);
+    background.setImage(backgroundImage);
+    addAndMakeVisible(background);
+
+    //
     findSheetFileBtn.setButtonText("Open Sheet File");
     findSheetFileBtn.setBounds(5, 5, 150, 50);
     addAndMakeVisible(findSheetFileBtn);
@@ -46,11 +52,6 @@ PluginEditor::PluginEditor (PluginProcessor& p)
     trackFilterView.setBounds(5, 60, getWidth() - 5 - 5, 100);
     addAndMakeVisible(trackFilterView);
 
-    //
-    auto backgroundImage = juce::ImageCache::getFromMemory(logo_png_data, logo_png_size);
-    background.setBounds(0, 65, 800, 600);
-    background.setImage(backgroundImage);
-    addAndMakeVisible(background);
     //
     console.setBounds(5, 60 + 100 + 5, getWidth() - 5 - 5, getHeight() - 200);
     console.setMultiLine(true);
