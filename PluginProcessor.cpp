@@ -4,6 +4,7 @@
 #include "PluginProcessor.h"
 #include <algorithm>
 #include "Preferences.h"
+#include <boost/interprocess/sync/named_mutex.hpp> 
 
 #define LOCK(mutex) std::lock_guard<Mutex> guard(mutex)
 
@@ -24,6 +25,10 @@ PluginProcessor::PluginProcessor()
 
 PluginProcessor::~PluginProcessor()
 {
+	for (const auto& ipMemoryId : GlobalIpMemoryIdsToRemove)
+	{
+		boost::interprocess::named_mutex::remove(ipMemoryId.c_str());
+	}
 	fileWatcher.stopThread(3000);
 	if (udpSender)
 	{

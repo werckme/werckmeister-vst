@@ -12,6 +12,8 @@
 #include "UdpSender.hpp"
 #include <memory>
 
+extern std::list<std::string> GlobalIpMemoryIdsToRemove;
+
 class PluginProcessor : public juce::AudioProcessor, public ILogger
 {
 public:

@@ -10,6 +10,8 @@
 
 namespace ip = boost::asio::ip;
 
+std::list<std::string> GlobalIpMemoryIdsToRemove;
+
 namespace
 {
 	const int THREAD_IDLE_TIME = 50;
@@ -71,6 +73,7 @@ namespace funk
 		jsonObj->setProperty("type", juce::var("werckmeister-vst-funk"));
 		jsonObj->setProperty("sheetPath", juce::var(_sheetPath));
 		jsonObj->setProperty("sheetTime", juce::var(currentTimeInQuarters));
+		jsonObj->setProperty("instance", juce::var((juce::int64)this));
 		jsonObj->setProperty("lastUpdateTimestamp", juce::var((juce::int64)lastUpdateTimestamp));
 
 		const auto &timeline = sheet->eventInfos;
@@ -121,7 +124,7 @@ namespace funk
 			typedef boost::interprocess::named_mutex Mutex;
 			std::unique_ptr<Mutex> _mutex;
 			std::string _lockId;
-			bool _isFree = false;
+			bool _isOnwer = false;
 		public:
 			Lock(const std::string& lockId) : _lockId(lockId)
 			{
@@ -130,25 +133,30 @@ namespace funk
 			}
 			~Lock()
 			{
+				if (!_isOnwer) {
+					return;
+				}
 				_mutex->unlock();
-				boost::interprocess::named_mutex::remove(_lockId.c_str());
 			}
 			bool tryLock()
 			{
-				_isFree = _mutex->try_lock();
-				return _isFree;
+				_isOnwer = _mutex->try_lock();
+				if (_isOnwer)
+				{
+					GlobalIpMemoryIdsToRemove.push_back(_lockId);
+				}
+				return _isOnwer;
 			}
-			inline bool isFree() const { return _isFree; }
+			inline bool isOnwer() const { return _isOnwer; }
 		};
 	}
 
 	void UdpSender::runImpl() 
 	{
-		
 		std::size_t mutexId = 0;
 		boost::hash_combine(mutexId, _sheetPath);
 		boost::hash_combine(mutexId, _port);
-		auto mutexIdString = std::to_string(mutexId) + "wmvst";
+		auto mutexIdString = std::to_string(mutexId) + "__wmvst___";
 		Lock lock(mutexIdString);
 		bool isFree = lock.tryLock(); // only one instance should send per sheet file
 		while (!threadShouldExit())
