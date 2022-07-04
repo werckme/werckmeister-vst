@@ -25,10 +25,6 @@ PluginProcessor::PluginProcessor()
 
 PluginProcessor::~PluginProcessor()
 {
-	for (const auto& ipMemoryId : GlobalIpMemoryIdsToRemove)
-	{
-		boost::interprocess::named_mutex::remove(ipMemoryId.c_str());
-	}
 	fileWatcher.stopThread(3000);
 	if (udpSender)
 	{

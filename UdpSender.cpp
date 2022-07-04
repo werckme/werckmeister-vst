@@ -10,8 +10,6 @@
 
 namespace ip = boost::asio::ip;
 
-std::list<std::string> GlobalIpMemoryIdsToRemove;
-
 namespace
 {
 	const int THREAD_IDLE_TIME = 50;
@@ -137,14 +135,11 @@ namespace funk
 					return;
 				}
 				_mutex->unlock();
+				boost::interprocess::named_mutex::remove(_lockId.c_str());
 			}
 			bool tryLock()
 			{
 				_isOnwer = _mutex->try_lock();
-				if (_isOnwer)
-				{
-					GlobalIpMemoryIdsToRemove.push_back(_lockId);
-				}
 				return _isOnwer;
 			}
 			inline bool isOnwer() const { return _isOnwer; }
@@ -163,7 +158,7 @@ namespace funk
 		{
 			if (!isFree)
 			{
-				isFree = lock.tryLock();
+				isFree = false; // lock.tryLock();
 				if(!isFree) // maybe the former locking instance has been released
 				{
 					sleep(THREAD_IDLE_TIME_WAITING);
