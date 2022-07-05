@@ -158,12 +158,8 @@ namespace funk
 		{
 			if (!isFree)
 			{
-				isFree = false; // lock.tryLock();
-				if(!isFree) // maybe the former locking instance has been released
-				{
-					sleep(THREAD_IDLE_TIME_WAITING);
-					continue;
-				}
+				sleep(THREAD_IDLE_TIME_WAITING);
+				continue;
 			}
 			if (!_socket)
 			{
