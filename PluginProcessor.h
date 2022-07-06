@@ -40,7 +40,7 @@ public:
 	void changeProgramName(int index, const juce::String& newName) override;
 	void getStateInformation(juce::MemoryBlock& destData) override;
 	void setStateInformation(const void* data, int sizeInBytes) override;
-	void compile(const juce::String& path);
+	bool compile(const juce::String& path);
 	void reCompile();
 	void log(ILogger::LogFunction) override;
 	void info(ILogger::LogFunction f) override { log(f); }

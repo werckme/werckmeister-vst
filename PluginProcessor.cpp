@@ -271,7 +271,16 @@ void PluginProcessor::setStateInformation(const void* data, int sizeInBytes)
 	{
 		return;
 	}
-	compile(pluginStateData.sheetPath);
+	auto succeeded = compile(pluginStateData.sheetPath);
+	if (!succeeded && pluginStateData.sheetPath.empty() == false) 
+	{
+		LOCK(processMutex);
+		fileWatcher.setFileList({pluginStateData.sheetPath});
+		int port = readPreferencesData().funkfeuerPort;
+		udpSender = std::make_unique<funk::UdpSender>(this, pluginStateData.sheetPath, port);
+		udpSender->compiledSheet = compiledSheet;
+		udpSender->startThread();
+	}
 }
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
@@ -315,35 +324,36 @@ void PluginProcessor::initCompiler()
 	compilerIsReady = true;
 }
 
-void PluginProcessor::compile(const juce::String& path)
+bool PluginProcessor::compile(const juce::String& path)
 {
 	if (!compilerIsReady)
 	{
-		return;
+		return false;
 	}
 	if (path.length() == 0)
 	{
-		return;
+		return false;
 	}
 	if (!juce::File(path).exists())
 	{
-		return;
-	}
-	if (udpSender)
-	{
-		udpSender->stopThread(1000);
-		udpSender.reset();
+		return false;
 	}
 	Compiler compiler(*this);
-	compiledSheet = compiler.compile(path.toStdString());
+	auto compilerResult = compiler.compile(path.toStdString());
 	pluginStateData.sheetPath = path.toStdString();
 	LOCK(processMutex);
 	_midiFile.clear();
 	_iteratorTrackMap.clear();
 	mutedTracks.clear();
-	if (!compiledSheet)
+	if (!compilerResult)
 	{
-		return;
+		return false;
+	}
+	compiledSheet = compilerResult;
+	if (udpSender)
+	{
+		udpSender->stopThread(1000);
+		udpSender.reset();
 	}
 	juce::MemoryInputStream fs(compiledSheet->midiData.data(), compiledSheet->midiData.size(), false);
 	_midiFile.readFrom(fs);
@@ -371,6 +381,7 @@ void PluginProcessor::compile(const juce::String& path)
 	udpSender = std::make_unique<funk::UdpSender>(this, path.toStdString(), port);
 	udpSender->compiledSheet = compiledSheet;
 	udpSender->startThread();
+	return true;
 }
 
 double PluginProcessor::getTempoInSecondsPerQuarterNote(const juce::MidiFile &midiFile)

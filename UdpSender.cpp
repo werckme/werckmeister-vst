@@ -60,11 +60,6 @@ namespace funk
 	
 	juce::String UdpSender::createMessage()
 	{
-		CompiledSheetPtr sheet = compiledSheet.lock();
-		if (!sheet) 
-		{
-			return "";
-		}
 		juce::MemoryOutputStream ostream;
 		auto jsonObj = new juce::DynamicObject();
 		lastUpdateTimestamp = (unsigned long)time(NULL);
@@ -73,7 +68,12 @@ namespace funk
 		jsonObj->setProperty("sheetTime", juce::var(currentTimeInQuarters));
 		jsonObj->setProperty("instance", juce::var((juce::int64)this));
 		jsonObj->setProperty("lastUpdateTimestamp", juce::var((juce::int64)lastUpdateTimestamp));
-
+		CompiledSheetPtr sheet = compiledSheet.lock();
+		if (!sheet) 
+		{
+			juce::JSON::writeToStream(ostream, jsonObj, true);
+			return ostream.toString();
+		}
 		const auto &timeline = sheet->eventInfos;
 		auto it = timeline.find(currentTimeInQuarters);
 		if (it == timeline.end())
