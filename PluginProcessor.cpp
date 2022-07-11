@@ -26,11 +26,7 @@ PluginProcessor::PluginProcessor()
 PluginProcessor::~PluginProcessor()
 {
 	fileWatcher.stopThread(3000);
-	if (udpSender)
-	{
-		udpSender->stopThread(3000);
-		udpSender.reset();
-	}
+	stopUdpSender();
 }
 
 void PluginProcessor::releaseResources()
@@ -277,9 +273,7 @@ void PluginProcessor::setStateInformation(const void* data, int sizeInBytes)
 		LOCK(processMutex);
 		fileWatcher.setFileList({pluginStateData.sheetPath});
 		int port = readPreferencesData().funkfeuerPort;
-		udpSender = std::make_unique<funk::UdpSender>(this, pluginStateData.sheetPath, port);
-		udpSender->compiledSheet = compiledSheet;
-		udpSender->startThread();
+		startUdpSender(pluginStateData.sheetPath);
 	}
 }
 
@@ -350,11 +344,7 @@ bool PluginProcessor::compile(const juce::String& path)
 		return false;
 	}
 	compiledSheet = compilerResult;
-	if (udpSender)
-	{
-		udpSender->stopThread(1000);
-		udpSender.reset();
-	}
+	stopUdpSender();
 	juce::MemoryInputStream fs(compiledSheet->midiData.data(), compiledSheet->midiData.size(), false);
 	_midiFile.readFrom(fs);
 	_midiFile.convertTimestampTicksToSeconds();
@@ -377,11 +367,27 @@ bool PluginProcessor::compile(const juce::String& path)
 		editor->tracksChanged();
 	}
 	updateFileWatcher(*compiledSheet);
+	startUdpSender(path);
+	return true;
+}
+
+void PluginProcessor::startUdpSender(const juce::String &path)
+{
 	int port = readPreferencesData().funkfeuerPort;
+	auto pluginHost = juce::PluginHostType();
 	udpSender = std::make_unique<funk::UdpSender>(this, path.toStdString(), port);
 	udpSender->compiledSheet = compiledSheet;
+	udpSender->hostDescription = pluginHost.getHostDescription();
 	udpSender->startThread();
-	return true;
+}
+
+void PluginProcessor::stopUdpSender()
+{
+	if (udpSender)
+	{
+		udpSender->stopThread(1500);
+		udpSender.reset();
+	}
 }
 
 double PluginProcessor::getTempoInSecondsPerQuarterNote(const juce::MidiFile &midiFile)

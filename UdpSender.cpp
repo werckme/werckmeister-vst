@@ -68,6 +68,7 @@ namespace funk
 		jsonObj->setProperty("sheetTime", juce::var(currentTimeInQuarters));
 		jsonObj->setProperty("instance", juce::var((juce::int64)this));
 		jsonObj->setProperty("lastUpdateTimestamp", juce::var((juce::int64)lastUpdateTimestamp));
+		jsonObj->setProperty("host", juce::var(hostDescription));
 		CompiledSheetPtr sheet = compiledSheet.lock();
 		if (!sheet) 
 		{

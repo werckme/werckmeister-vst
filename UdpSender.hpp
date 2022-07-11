@@ -44,6 +44,7 @@ namespace funk
 	protected:
 	public:
 		std::weak_ptr<CompiledSheet> compiledSheet;
+		std::string hostDescription;
 		double currentTimeInQuarters = 0;
 		UdpSender(ILogger *logger, const std::string &sheetPathName, int port);
 		virtual ~UdpSender() = default;

@@ -53,6 +53,8 @@ public:
 	const MutedTracks& getMutedTracks() const { return mutedTracks; }
 	void initCompiler();
 private:
+	void startUdpSender(const juce::String &path);
+	void stopUdpSender();
 	double currentSheetTempoInSecondsPerQuarterNote = 0;
 	bool compilerIsReady = false;
 	MutedTracks mutedTracks;
