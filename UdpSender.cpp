@@ -10,14 +10,9 @@
 
 namespace ip = boost::asio::ip;
 
-namespace
-{
-	const int THREAD_IDLE_TIME = 50;
-	const int THREAD_IDLE_TIME_WAITING = 1000;
-}
-
 namespace funk
 {
+	const int UdpSender::THREAD_IDLE_TIME = 50;
 	UdpSender::UdpSender(ILogger *logger, const std::string &sheetPath, int port) : 
 		juce::Thread("UDP sender"), 
 		_sheetPath(sheetPath), 
@@ -147,20 +142,37 @@ namespace funk
 		};
 	}
 
+	namespace 
+	{
+		juce::int64 getFileTimeStamp(const std::string& path)
+		{
+			try 
+			{
+				auto f = juce::File(path);
+				return f.getLastModificationTime().toMilliseconds();
+			} catch(...) 
+			{
+				return 0;
+			}
+		}
+	}
+
 	void UdpSender::runImpl() 
 	{
 		std::size_t mutexId = 0;
+		auto timeStamp = getFileTimeStamp(_sheetPath);
 		boost::hash_combine(mutexId, _sheetPath);
 		boost::hash_combine(mutexId, _port);
-		auto mutexIdString = std::to_string(mutexId) + "__wmvst___";
+		boost::hash_combine(mutexId, timeStamp);
+		auto mutexIdString = std::to_string(mutexId);
 		Lock lock(mutexIdString);
 		bool isFree = lock.tryLock(); // only one instance should send per sheet file
-		while (!threadShouldExit())
+		while (!threadShouldExit() && isFree)
 		{
-			if (!isFree)
+			auto fileChanged = getFileTimeStamp(_sheetPath) != timeStamp;
+			if (fileChanged) 
 			{
-				sleep(THREAD_IDLE_TIME_WAITING);
-				continue;
+				break;
 			}
 			if (!_socket)
 			{
@@ -172,14 +184,12 @@ namespace funk
 				catch(const std::exception &ex)
 				{
 					_logger->error(LogLambda(log << "starting funkfeuer failed: " << ex.what()));
-					sleep(THREAD_IDLE_TIME_WAITING);
-					continue;
+					break;
 				}
 				catch(...)
 				{
 					_logger->error(LogLambda(log << "starting funkfeuer failed."));
-					sleep(THREAD_IDLE_TIME_WAITING);
-					continue;
+					break;
 				}
 			}
 			auto msg = createMessage();
@@ -192,10 +202,12 @@ namespace funk
 				catch(const std::exception &ex) 
 				{
 					_logger->error(LogLambda(log << "funkfeuer failed:" << ex.what()));
+					break;
 				}
 				catch(...)
 				{
 					_logger->error(LogLambda(log << "funkfeuer failed."));
+					break;
 				}
 			}
 			sleep(THREAD_IDLE_TIME);

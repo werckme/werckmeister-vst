@@ -20,7 +20,7 @@ namespace funk
 		void start(const std::string &host);
 		void stop();
 		void send(const char *bytes, size_t length);
-
+		static const int THREAD_IDLE_TIME;
 	private:
 		typedef std::string Host;
 		typedef std::string Port;

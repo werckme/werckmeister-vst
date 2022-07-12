@@ -17,6 +17,7 @@ public:
 	void setFileList(const FileList& fileList);
 	void run() override;
 	void handleAsyncUpdate() override;
+	static const int THREAD_IDLE_TIME;
 private:
 	typedef std::mutex Mutex;
 	typedef juce::int64 TimeStamp;

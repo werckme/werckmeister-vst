@@ -4,11 +4,8 @@
 
 #define LOCK(mutex) std::lock_guard<Mutex> guard(mutex)
 
-namespace 
-{
-	const int THREAD_IDLE_TIME = 500;
-}
 
+const int FileWatcher::THREAD_IDLE_TIME = 50;
 FileWatcher::FileWatcher() : Thread("File Watcher Thread")
 {
 	setPriority(0);

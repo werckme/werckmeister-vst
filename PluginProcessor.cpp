@@ -25,8 +25,8 @@ PluginProcessor::PluginProcessor()
 
 PluginProcessor::~PluginProcessor()
 {
-	fileWatcher.stopThread(3000);
 	stopUdpSender();
+	fileWatcher.stopThread(FileWatcher::THREAD_IDLE_TIME * 2);
 }
 
 void PluginProcessor::releaseResources()
@@ -335,6 +335,7 @@ bool PluginProcessor::compile(const juce::String& path)
 	Compiler compiler(*this);
 	auto compilerResult = compiler.compile(path.toStdString());
 	pluginStateData.sheetPath = path.toStdString();
+	stopUdpSender();
 	LOCK(processMutex);
 	_midiFile.clear();
 	_iteratorTrackMap.clear();
@@ -344,7 +345,6 @@ bool PluginProcessor::compile(const juce::String& path)
 		return false;
 	}
 	compiledSheet = compilerResult;
-	stopUdpSender();
 	juce::MemoryInputStream fs(compiledSheet->midiData.data(), compiledSheet->midiData.size(), false);
 	_midiFile.readFrom(fs);
 	_midiFile.convertTimestampTicksToSeconds();
@@ -385,7 +385,7 @@ void PluginProcessor::stopUdpSender()
 {
 	if (udpSender)
 	{
-		udpSender->stopThread(1500);
+		udpSender->stopThread(funk::UdpSender::THREAD_IDLE_TIME * 2);
 		udpSender.reset();
 	}
 }
