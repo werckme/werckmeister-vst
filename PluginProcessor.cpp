@@ -5,8 +5,12 @@
 #include <algorithm>
 #include "Preferences.h"
 #include <boost/interprocess/sync/named_mutex.hpp> 
+#include <sstream>
 
 #define LOCK(mutex) std::lock_guard<Mutex> guard(mutex)
+
+static const int MinWerckmeisterVersion = 10420;
+static const char * MinWerckmeisterVersionStr = "1.0.42";
 
 PluginProcessor::PluginProcessor()
 	: AudioProcessor(BusesProperties()
@@ -300,6 +304,34 @@ void PluginProcessor::updateFileWatcher(const CompiledSheet& sheet)
 	fileWatcher.setFileList(filesToWatch);
 }
 
+namespace 
+{
+	// https://onlinegdb.com/aPPpWOYyd
+	int parseVersionNumber(const std::string &versionStr)
+	{
+		if (versionStr.empty())
+		{
+			return 0;
+		}
+		int base = 10000;
+		int version = 0;
+		for(char ch : versionStr) 
+		{
+			if(ch == '.') 
+			{
+				continue;
+			}
+			if (ch < '0' || ch > '9') 
+			{
+				break;
+			}
+			version += (ch - '0') * base;
+			base /= 10;
+		}
+		return version;
+	}
+}
+
 void PluginProcessor::initCompiler()
 {
 	Compiler compiler(*this);
@@ -311,6 +343,15 @@ void PluginProcessor::initCompiler()
 		info(LogLambda(log << "Please install werckmeister on your system."));
 		info(LogLambda(log << "https://werckme.github.io"));
 		info(LogLambda(log << "If you installed werckmeister and still got this message, try to set the werckmeister installation path in the preferences."));
+		compilerIsReady = false;
+		return;
+	}
+	if (parseVersionNumber(version) < MinWerckmeisterVersion) 
+	{
+		error(LogLambda(log << "The installed werckmeister version '" << version << "' is not supported by this plugin."));
+		info(LogLambda(log << "You need weckmeister >= " << MinWerckmeisterVersionStr << "."));
+		info(LogLambda(log << "Please update werckmeister on your system."));
+		info(LogLambda(log << "https://werckme.github.io"));
 		compilerIsReady = false;
 		return;
 	}
