@@ -48,7 +48,7 @@ juce_add_plugin(WerckmeisterVST
     # ICON_SMALL ...
     COMPANY_NAME werckme.github.io              # Specify the name of the plugin's author
     COMPANY_WEBSITE "https://werckme.github.io"
-    IS_SYNTH FALSE                              # Is this a synth or an effect?
+    IS_SYNTH TRUE                               # Is this a synth or an effect?
     NEEDS_MIDI_INPUT FALSE                      # Does the plugin need midi input?
     NEEDS_MIDI_OUTPUT TRUE                      # Does the plugin need midi output?
     IS_MIDI_EFFECT TRUE
