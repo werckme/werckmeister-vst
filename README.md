@@ -7,6 +7,13 @@
 The official werckmeister VST Plugin
 
 
-## TODO MVP
-* log shows old messages
-* log behaviour after preferences->ok
+## Plugin can't be opened on a Mac
+If you get a message like:
+> Werckmeister.vst can't be opened because its from an unidentified developer
+
+You can override this by executing the following command:  
+```sudo xattr -rd com.apple.quarantine <<Path to Plugin>>```
+
+for example:
+
+```sudo xattr -rd com.apple.quarantine ~/myVsts/Werckmeister\ VST.vst3```
