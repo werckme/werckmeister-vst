@@ -6,6 +6,10 @@
 # werckmeister-vst
 The official werckmeister VST Plugin
 
+https://www.youtube.com/watch?v=AiYw37mhTTo
+
+More Info:
+https://werckme.github.io/vst
 
 ## Plugin can't be opened on a Mac
 If you get a message like:
