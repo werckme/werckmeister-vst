@@ -52,6 +52,7 @@ public:
 	TrackNames trackNames;
 	const MutedTracks& getMutedTracks() const { return mutedTracks; }
 	void initCompiler();
+	double last_pos = 0;
 private:
 	void startUdpSender(const juce::String &path);
 	void stopUdpSender();

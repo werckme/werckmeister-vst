@@ -9,7 +9,7 @@
 #include <string>
 
 //==============================================================================
-class PluginEditor  : public juce::AudioProcessorEditor, public juce::AsyncUpdater
+class PluginEditor  : public juce::AudioProcessorEditor, public juce::AsyncUpdater, public juce::Timer
 {
 public:
     explicit PluginEditor (PluginProcessor&);
@@ -21,6 +21,7 @@ public:
     virtual void writeLine(const juce::String&);
     void tracksChanged();
     void handleAsyncUpdate() override;
+    void timerCallback() override;
 private:
     std::list<std::string> logCache;
     bool tracksAreDirty = false;
@@ -33,6 +34,7 @@ private:
     juce::ImageButton preferences;
     juce::ImageComponent background;
     juce::Viewport trackFilterView;
+    juce::Label dbg;
     std::unique_ptr<Preferences> preferencesComponent;
     FilterComponent trackFilter;
     PluginProcessor& processorRef;

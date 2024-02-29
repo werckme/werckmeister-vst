@@ -22,6 +22,10 @@ PluginEditor::PluginEditor (PluginProcessor& p)
     background.setImage(backgroundImage);
     addAndMakeVisible(background);
 
+    dbg.setText("XXX", juce::NotificationType::dontSendNotification);
+    addAndMakeVisible(dbg);
+    dbg.setBounds(550, 5, 150, 50);
+
     //
     findSheetFileBtn.setButtonText("Open Sheet File");
     findSheetFileBtn.setBounds(5, 5, 150, 50);
@@ -69,6 +73,7 @@ PluginEditor::PluginEditor (PluginProcessor& p)
     logCache.insert(logCache.end(), processorlogCache.begin(), processorlogCache.end());
     tracksChanged();
     triggerAsyncUpdate();
+    startTimer(10);
 }
 
 void PluginEditor::onTrackFilterChanged(int trackIndex, bool filterValue)
@@ -130,6 +135,11 @@ void PluginEditor::handleAsyncUpdate()
     console.setText(ss.str());
     logCache.clear();
     console.scrollDown();
+}
+
+void PluginEditor::timerCallback()
+{
+    dbg.setText(std::to_string(processorRef.last_pos), juce::NotificationType::dontSendNotification);
 }
 
 void PluginEditor::writeLine(const juce::String& line)

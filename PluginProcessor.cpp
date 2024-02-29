@@ -154,6 +154,7 @@ void PluginProcessor::processBlock(juce::AudioBuffer<float>& buffer,
 	playHead_->getCurrentPosition(posInfo);
 	if (udpSender)
 	{
+		last_pos = posInfo.timeInSeconds;
 		udpSender->currentTimeInQuarters = posInfo.timeInSeconds / currentSheetTempoInSecondsPerQuarterNote;
 	}
 	if (!posInfo.isPlaying && _lastIsPlayingState) 
