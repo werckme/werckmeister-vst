@@ -8,7 +8,7 @@
 const int FileWatcher::THREAD_IDLE_TIME = 50;
 FileWatcher::FileWatcher() : Thread("File Watcher Thread")
 {
-	setPriority(0);
+	juce::Thread::setPriority(0);
 }
 
 void FileWatcher::run()
