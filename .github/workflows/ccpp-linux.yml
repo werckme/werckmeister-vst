@@ -42,7 +42,7 @@ jobs:
     - name: update submodules
       run: git submodule update --init --recursive
     - name: configure
-      run: cmake -DCMAKE_BUILD_TYPE=Release ..
+      run: WM_DOWNLOAD_EXTERNALS=1 cmake -DCMAKE_BUILD_TYPE=Release ..
       working-directory: build
     - name: build
       run: cmake --build .
