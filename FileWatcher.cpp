@@ -8,11 +8,12 @@
 const int FileWatcher::THREAD_IDLE_TIME = 50;
 FileWatcher::FileWatcher() : Thread("File Watcher Thread")
 {
-	juce::Thread::setPriority(juce::Thread::Priority::background);
+	
 }
 
 void FileWatcher::run()
 {
+	juce::Thread::setPriority(juce::Thread::Priority::background);
 	while (!threadShouldExit())
 	{
 		checkFiles();
