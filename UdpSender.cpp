@@ -22,8 +22,8 @@ namespace funk
 	{
 		ip::udp::resolver resolver(_service);
 		auto hostInfo = getHostInfo(hostStr);
-		ip::udp::resolver::query query(ip::udp::v4(), std::get<0>(hostInfo), std::get<1>(hostInfo));
-		_endpoint = *resolver.resolve(query);
+		auto results = resolver.resolve(ip::udp::v4(), std::get<0>(hostInfo), std::get<1>(hostInfo));
+		_endpoint = *results.begin();
 		_socket = std::move(SocketPtr(new Socket(_service)));
 		_socket->open(ip::udp::v4());
 	}

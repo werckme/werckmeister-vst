@@ -5,7 +5,7 @@ execute_process(COMMAND git branch --show-current OUTPUT_VARIABLE GIT_BRANCH_NAM
 # Project name.
 project(werckmeister-vst VERSION 1.0.0)
 set (CMAKE_CXX_STANDARD 17)
-set(BOOST_VERSION "1.78.0")
+set(BOOST_VERSION "1.87.0")
 SET(BOOST_PACKAGES system)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
@@ -36,7 +36,8 @@ if ("$ENV{WM_DOWNLOAD_EXTERNALS}")
 endif ()
 
 
-find_package(Boost 1.70.0 COMPONENTS ${BOOST_PACKAGES} REQUIRED)
+#find_package(Boost 1.70.0 COMPONENTS ${BOOST_PACKAGES} REQUIRED)
+find_package(Boost 1.87.0 COMPONENTS ${BOOST_PACKAGES} REQUIRED)
 
 add_subdirectory(ext/JUCE)  
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})

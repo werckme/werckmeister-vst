@@ -30,7 +30,7 @@ namespace funk
 		typedef boost::asio::ip::udp::endpoint Endpoint;
 		typedef std::unique_ptr<Endpoint> EndpointPtr;
 		typedef boost::system::error_code ErrorCode;
-		typedef boost::asio::io_service Service;
+		typedef boost::asio::io_context Service;
 		unsigned long lastUpdateTimestamp = 0;
 		Service _service;
 		SocketPtr _socket;

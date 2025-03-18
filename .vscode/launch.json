@@ -28,7 +28,7 @@
             "name": "(gdb) Starten",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/WerckmeisterVST_artefacts/Debug/Standalone/Werckmeister VST",
+            "program": "${workspaceFolder}/build/WerckmeisterVST_artefacts/Standalone/Werckmeister VST",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${fileDirname}",

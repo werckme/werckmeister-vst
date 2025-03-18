@@ -67,6 +67,24 @@
         "typeindex": "cpp",
         "typeinfo": "cpp",
         "variant": "cpp",
-        "*.ipp": "cpp"
+        "*.ipp": "cpp",
+        "csetjmp": "cpp",
+        "any": "cpp",
+        "strstream": "cpp",
+        "cfenv": "cpp",
+        "charconv": "cpp",
+        "compare": "cpp",
+        "concepts": "cpp",
+        "coroutine": "cpp",
+        "source_location": "cpp",
+        "format": "cpp",
+        "numbers": "cpp",
+        "ranges": "cpp",
+        "semaphore": "cpp",
+        "span": "cpp",
+        "stdfloat": "cpp",
+        "stop_token": "cpp",
+        "valarray": "cpp",
+        "text_encoding": "cpp"
     }
 }
